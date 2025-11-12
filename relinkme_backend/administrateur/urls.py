@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import *
+from .adminViews import *
 
 urlpatterns= [
     path('create/<int:id_utilisateur>/<int:id_admin>', create_admin ),

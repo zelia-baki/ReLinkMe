@@ -32,3 +32,4 @@ class Administrateur(models.Model):
 
     def __str__(self):
         return f"{self.utilisateur.nom_complet} ({self.niveau_autorisation})"
+

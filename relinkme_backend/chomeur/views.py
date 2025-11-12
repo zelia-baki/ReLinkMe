@@ -1,5 +1,6 @@
+# chomeur/views.py
 from django.db import transaction
-from rest_framework import generics
+from rest_framework import generics, status, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
@@ -14,22 +15,28 @@ class HelloChomeurView(APIView):
 
 
 # ============================================================
-# CHOMEUR
+# 🔁 Fonctions utilitaires
+# ============================================================
+def get_authenticated_user(request):
+    """Renvoie l'utilisateur connecté ou None."""
+    return request.user if getattr(request, "user", None) and request.user.is_authenticated else None
+
+
+# ============================================================
+# 💼 CHOMEUR
 # ============================================================
 class ChomeurListCreateView(generics.ListCreateAPIView):
-    queryset = Chomeur.objects.all().select_related('utilisateur')
+    queryset = Chomeur.objects.select_related('utilisateur').all()
     serializer_class = ChomeurSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['utilisateur__nom_complet', 'profession', 'code_chomeur']
 
     @transaction.atomic
     def perform_create(self, serializer):
-        """
-        Crée un utilisateur automatiquement si non fourni,
-        puis associe le chômeur à cet utilisateur.
-        """
+        creator = get_authenticated_user(self.request)
         data = self.request.data
-        creator = self.request.user if getattr(self.request, 'user', None) and self.request.user.is_authenticated else None
 
-        # --- Cas 1 : utilisateur (id) fourni ---
+        # --- Cas 1 : utilisateur existant fourni ---
         utilisateur_id = data.get('utilisateur')
         if utilisateur_id:
             try:
@@ -49,6 +56,7 @@ class ChomeurListCreateView(generics.ListCreateAPIView):
         if not (email and password and nom_complet):
             raise ValidationError("Vous devez fournir 'email', 'password' et 'nom_complet' si 'utilisateur' n'est pas fourni.")
 
+        # Vérification d’unicité
         if Utilisateur.objects.filter(email=email).exists():
             user = Utilisateur.objects.get(email=email)
             if hasattr(user, 'profil_chomeur'):
@@ -63,65 +71,78 @@ class ChomeurListCreateView(generics.ListCreateAPIView):
 
         serializer.save(utilisateur=user, created_by=creator)
 
-    def perform_update(self, serializer):
-        modifier = self.request.user if getattr(self.request, 'user', None) and self.request.user.is_authenticated else None
-        serializer.save(modified_by=modifier)
+    def create(self, request, *args, **kwargs):
+        """Personnalise la réponse après création."""
+        response = super().create(request, *args, **kwargs)
+        response.data['message'] = "Chômeur créé avec succès."
+        return response
 
 
 class ChomeurDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Chomeur.objects.all().select_related('utilisateur')
+    queryset = Chomeur.objects.select_related('utilisateur')
     serializer_class = ChomeurSerializer
 
     def perform_update(self, serializer):
-        modifier = self.request.user if getattr(self.request, 'user', None) and self.request.user.is_authenticated else None
+        modifier = get_authenticated_user(self.request)
         serializer.save(modified_by=modifier)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 
 # ============================================================
-# CHOMEUR COMPETENCE
+# 🧠 CHOMEUR COMPETENCE
 # ============================================================
 class ChomeurCompetenceListCreateView(generics.ListCreateAPIView):
-    queryset = ChomeurCompetence.objects.all().select_related('chomeur', 'competence')
+    queryset = ChomeurCompetence.objects.select_related('chomeur', 'competence')
     serializer_class = ChomeurCompetenceSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['chomeur__utilisateur__nom_complet', 'competence__libelle']
 
+    @transaction.atomic
     def perform_create(self, serializer):
-        creator = self.request.user if getattr(self.request, 'user', None) and self.request.user.is_authenticated else None
+        creator = get_authenticated_user(self.request)
         serializer.save(created_by=creator)
 
-    def perform_update(self, serializer):
-        modifier = self.request.user if getattr(self.request, 'user', None) and self.request.user.is_authenticated else None
-        serializer.save(modified_by=modifier)
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        response.data['message'] = "Compétence ajoutée au chômeur avec succès."
+        return response
 
 
 class ChomeurCompetenceDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ChomeurCompetence.objects.all().select_related('chomeur', 'competence')
+    queryset = ChomeurCompetence.objects.select_related('chomeur', 'competence')
     serializer_class = ChomeurCompetenceSerializer
 
     def perform_update(self, serializer):
-        modifier = self.request.user if getattr(self.request, 'user', None) and self.request.user.is_authenticated else None
+        modifier = get_authenticated_user(self.request)
         serializer.save(modified_by=modifier)
 
 
 # ============================================================
-# EXPLOIT
+# 🏆 EXPLOIT
 # ============================================================
 class ExploitListCreateView(generics.ListCreateAPIView):
-    queryset = Exploit.objects.all().select_related('chomeur')
+    queryset = Exploit.objects.select_related('chomeur')
     serializer_class = ExploitSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['titre', 'chomeur__utilisateur__nom_complet', 'code_exploit']
 
+    @transaction.atomic
     def perform_create(self, serializer):
-        creator = self.request.user if getattr(self.request, 'user', None) and self.request.user.is_authenticated else None
+        creator = get_authenticated_user(self.request)
         serializer.save(created_by=creator)
 
-    def perform_update(self, serializer):
-        modifier = self.request.user if getattr(self.request, 'user', None) and self.request.user.is_authenticated else None
-        serializer.save(modified_by=modifier)
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        response.data['message'] = "Exploit enregistré avec succès."
+        return response
 
 
 class ExploitDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Exploit.objects.all().select_related('chomeur')
+    queryset = Exploit.objects.select_related('chomeur')
     serializer_class = ExploitSerializer
 
     def perform_update(self, serializer):
-        modifier = self.request.user if getattr(self.request, 'user', None) and self.request.user.is_authenticated else None
+        modifier = get_authenticated_user(self.request)
         serializer.save(modified_by=modifier)

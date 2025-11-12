@@ -22,5 +22,6 @@ urlpatterns = [
     path('api/core/', include('core.urls')),
     path('api/chomeur/', include('chomeur.urls')),
     path('api/recruteur/', include('recruteur.urls')),
+    path('api/admin/',include('administrateur.urls'))
 ]
 

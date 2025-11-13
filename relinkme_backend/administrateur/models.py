@@ -106,6 +106,19 @@ class HistoriqueValidation(models.Model):
             self.code_historique = f"HIST{str(self.id).zfill(5)}"
             super().save(update_fields=['code_historique'])
 
+    def create_history_object(self,data):
+        try:
+            self.id_admin = Administrateur.objects.get(id=data['id_admin'])
+            self.id_utilisateur_cible = Utilisateur.objects.get(id=data['id_utilisateur_cible'])
+        except (Administrateur.DoesNotExist, Utilisateur.DoesNotExist) as e:
+            raise ValueError(f"Related object not found: {str(e)}")
+
+        self.type_action = data['type_action']
+        self.table_concernee = data['table_concernee']
+        self.id_enregistrement = data['id_enregistrement']
+        self.details = data['details']
+        self.save()
+
 class PieceTypeEnum(models.TextChoices):
     PASSEPORT = 'passeport', 'passeport'
     CARTE_IDENTITE = 'carte_identite', 'carte_identite'

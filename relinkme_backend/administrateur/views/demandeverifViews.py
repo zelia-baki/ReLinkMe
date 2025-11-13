@@ -1,8 +1,8 @@
 from datetime import datetime
-
+from django.db import transaction
 from core.models import Utilisateur
-from .models import DemandeVerification, Administrateur
-from .serializers import DemandeVerificationSerializer
+from administrateur.models import DemandeVerification, Administrateur, HistoriqueValidation
+from administrateur.serializers import DemandeVerificationSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -12,7 +12,7 @@ def create_demande_verif(request,id_utilisateur):
     try:
         utilisateur = Utilisateur.objects.get(id=id_utilisateur)
         type_verification = request.data.get('type_verification')
-        statut = request.data.get('status')
+        statut = request.data.get('statut')
         created_by = utilisateur
         demande = DemandeVerification.objects.create(
             id_utilisateur= utilisateur,
@@ -43,14 +43,18 @@ def create_demande_verif(request,id_utilisateur):
 @api_view(['POST'])
 def traiter_demande(request,id_demande_traiter,id_admin_responsable):
     try:
-        utilisateur_responsable = Utilisateur.objects.get(id=id_admin_responsable)
+        admin_responsable = Administrateur.objects.get(id=id_admin_responsable)
+        admin_id = admin_responsable.utilisateur_id
+
+        utilisateur_responsable = Utilisateur.objects.get(id=admin_id)
         demande_traiter = DemandeVerification.objects.get(id=id_demande_traiter)
+        type_verification = demande_traiter.type_verification
 
         statut = request.data.get('statut')
         motif_refus = request.data.get('motif_refus')
         modified_by = utilisateur_responsable
 
-        demande_traiter.id_admin_responsable = utilisateur_responsable
+        demande_traiter.id_admin_responsable = admin_responsable
         demande_traiter.statut = statut
         demande_traiter.motif_refus = motif_refus
         demande_traiter.modified_by = modified_by
@@ -58,8 +62,26 @@ def traiter_demande(request,id_demande_traiter,id_admin_responsable):
         if demande_traiter.date_traitement is None:
             date_traitement = datetime.now()
             demande_traiter.date_traitement = date_traitement
+        action={
+            "approuvee": "validation_compte",
+            "refusee":"refus_compte"
+        }
 
-        demande_traiter.save()
+        with transaction.atomic():
+            demande_traiter.save()
+
+            history_data = {
+                'id_admin': id_admin_responsable,
+                'id_utilisateur_cible': demande_traiter.id_utilisateur.id,
+                'type_action': action[statut],
+                'table_concernee': DemandeVerification._meta.db_table,
+                'id_enregistrement': demande_traiter.id,
+                'details': f"{action[statut]} de vérification {type_verification}"
+            }
+
+            print(history_data)
+            history = HistoriqueValidation()
+            history.create_history_object(history_data)
 
         return Response({
             "success": True,
@@ -118,6 +140,5 @@ def lister_demandes(request):
             "message": str(e),
             "error": e.__class__.__name__
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 

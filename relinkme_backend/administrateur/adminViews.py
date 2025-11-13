@@ -47,7 +47,7 @@ def create_admin(request, id_utilisateur, id_admin=0):
             "message": "Administrateur créé avec succès",
         }, status=status.HTTP_201_CREATED)
 
-    except Utilisateur.DoesNotExist:
+    except utilisateur.DoesNotExist:
         return Response({
             "success": False,
             "message": "Utilisateur introuvable"

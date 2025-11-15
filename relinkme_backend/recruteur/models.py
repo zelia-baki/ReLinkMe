@@ -28,9 +28,9 @@ class Recruteur(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if not self.code_recruteur:
-            self.code_recruteur = f"REC{str(self.id).zfill(5)}"
+            prefix = 'ENT' if self.type_recruteur == 'entreprise' else 'IND'
+            self.code_recruteur = f"{prefix}{str(self.id).zfill(5)}"
             super().save(update_fields=['code_recruteur'])
-
     def __str__(self):
         return self.nom_entreprise or self.utilisateur.nom_complet
 
@@ -53,8 +53,8 @@ class Offre(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if not self.code_offre:
-            self.code_offre = f"OFFR{str(self.id).zfill(5)}"
-            super().save(update_fields=['code_offre'])
+            self.code_offre = f"OFF{str(self.id).zfill(5)}"
+        super().save(update_fields=['code_offre'])
 
     def __str__(self):
         return self.titre

@@ -1,3 +1,4 @@
+from _decimal import Decimal
 from django.db import models
 from django.utils import timezone
 
@@ -208,6 +209,7 @@ class VerificationStatutEnum(models.TextChoices):
     VERIFIE = 'verifie', 'verifie'
     REFUSE = 'refuse', 'refuse'
 
+import requests
 class VerificationLocalisation(models.Model):
     id = models.AutoField(primary_key=True)
     code_verification = models.CharField(max_length=10, unique=True, null=True, blank=True)
@@ -234,5 +236,51 @@ class VerificationLocalisation(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if not self.code_verification:
-            self.code_verification = f"VERIF-{str(self.id).zfill(5)}"
+            self.code_verification = f"VRF{str(self.id).zfill(5)}"
             super().save(update_fields=['code_verification'])
+
+
+    def get_location(self):
+        """Gets approximate user location based on public IP."""
+        try:
+            response = requests.get("https://ipinfo.io", timeout=5)
+            response.raise_for_status()
+
+            data = response.json()
+            location = data.get("loc")
+            lat, long = location.split(",")
+
+            return {
+                    "ville": data.get("city"),
+                    "region": data.get("region"),
+                    "pays": data.get("country"),
+                    "latitude": lat,
+                    "longitude": long
+                }
+
+        except Exception as e:
+            # best: log it
+            return {"error": str(e)}
+
+    def create_verif_loc(self, user_data):
+        """Links location to an utilisateur and stores it."""
+        try:
+            self.id_utilisateur_id = Utilisateur.objects.get(id=user_data['id_utilisateur']).id
+        except Utilisateur.DoesNotExist:
+            raise ValueError("Utilisateur non existant")
+
+        # Get location data
+        location = self.get_location()
+        if not location or "error" in location:
+            raise ValueError("Impossible de recueillir les informations de localisation")
+
+        self.ville = location['ville']
+        self.pays = location['pays']
+        self.latitude = Decimal(location['latitude'])
+        self.longitude = Decimal(location['longitude'])
+        self.justificatif_url= f"https://www.google.com/maps?q={Decimal(location['latitude'])},{Decimal(location['longitude'])}"
+        self.statut = user_data['statut']
+        self.created_by = Utilisateur.objects.get(id=user_data['id_utilisateur'])
+
+        self.save()
+

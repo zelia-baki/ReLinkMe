@@ -44,7 +44,20 @@ class Offre(models.Model):
     type_contrat = models.CharField(max_length=50)
     salaire = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     date_limite = models.DateField(null=True, blank=True)
-    statut = models.CharField(max_length=30, default='active')
+    
+    # ⭐ MODIFICATION ICI
+    STATUT_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('closed', 'Fermée'),
+    ]
+    
+    statut = models.CharField(
+        max_length=30, 
+        choices=STATUT_CHOICES,
+        default='active'
+    )
+    
     date_creation = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -54,7 +67,7 @@ class Offre(models.Model):
         super().save(*args, **kwargs)
         if not self.code_offre:
             self.code_offre = f"OFF{str(self.id).zfill(5)}"
-        super().save(update_fields=['code_offre'])
+            super().save(update_fields=['code_offre'])
 
     def __str__(self):
         return self.titre

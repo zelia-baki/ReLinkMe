@@ -9,6 +9,11 @@ from .views import (
     ChomeurCompetenceDetailView,
     ExploitListCreateView,
     ExploitDetailView,
+    ProfilChomeurView,
+    MesCompetencesView,
+    MesExploitsView,
+    BulkCompetencesView,
+    BulkDeleteCompetencesView,
 )
 
 urlpatterns = [
@@ -26,4 +31,9 @@ urlpatterns = [
     
     path('exploits/', ExploitListCreateView.as_view(), name='exploit-list'),
     path('exploits/<int:pk>/', ExploitDetailView.as_view(), name='exploit-detail'),
+    path('mon-profil/', ProfilChomeurView.as_view(), name='mon-profil'),
+    path('mes-competences/', MesCompetencesView.as_view(), name='mes-competences'),
+    path('mes-exploits/', MesExploitsView.as_view(), name='mes-exploits'),
+      path('mes-competences/bulk/', BulkCompetencesView.as_view(), name='bulk-competences'),
+    path('mes-competences/bulk-delete/', BulkDeleteCompetencesView.as_view(), name='bulk-delete-competences'),
 ]

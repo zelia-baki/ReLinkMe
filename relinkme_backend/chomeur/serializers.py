@@ -21,6 +21,13 @@ class ChomeurSerializer(serializers.ModelSerializer):
         queryset=Utilisateur.objects.filter(profil_chomeur__isnull=True),
         required=False, allow_null=True
     )
+    
+    competences = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+        allow_empty=True
+    )
 
     class Meta:
         model = Chomeur
@@ -29,6 +36,7 @@ class ChomeurSerializer(serializers.ModelSerializer):
             'utilisateur', 'utilisateur_nom',
             'email', 'password', 'nom_complet', 'telephone', 'localisation',
             'profession', 'description', 'niveau_expertise', 'solde_jetons',
+            'competences',  # 🆕 Ajoutez ici
             'created_by', 'modified_by', 'created_at', 'updated_at',
         ]
         read_only_fields = (
@@ -63,8 +71,11 @@ class ChomeurSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         """
-        Crée automatiquement un utilisateur si les champs email/password/nom_complet sont fournis.
+        Crée automatiquement un utilisateur et ses compétences
         """
+        # 🆕 Extraire les compétences avant création
+        competences_ids = validated_data.pop('competences', [])
+        
         # Extraire les données utilisateur
         email = validated_data.pop('email', None)
         password = validated_data.pop('password', None)
@@ -74,27 +85,46 @@ class ChomeurSerializer(serializers.ModelSerializer):
 
         # Si un utilisateur existe déjà, l'utiliser
         if 'utilisateur' in validated_data and validated_data['utilisateur']:
-            return super().create(validated_data)
+            chomeur = super().create(validated_data)
+        else:
+            # Créer un nouvel utilisateur
+            if email and password and nom_complet:
+                if Utilisateur.objects.filter(email=email).exists():
+                    raise serializers.ValidationError({"email": "Cet email est déjà utilisé."})
 
-        # Sinon, créer un nouvel utilisateur
-        if email and password and nom_complet:
-            # Vérifier si l'email existe déjà
-            if Utilisateur.objects.filter(email=email).exists():
-                raise serializers.ValidationError({"email": "Cet email est déjà utilisé."})
+                utilisateur = Utilisateur.objects.create_user(
+                    email=email,
+                    nom_complet=nom_complet,
+                    password=password,
+                    role='chomeur',
+                    telephone=telephone or '',
+                    localisation=localisation or ''
+                )
+                validated_data['utilisateur'] = utilisateur
 
-            # Créer l'utilisateur
-            utilisateur = Utilisateur.objects.create_user(
-                email=email,
-                nom_complet=nom_complet,
-                password=password,
-                role='chomeur',
-                telephone=telephone or '',
-                localisation=localisation or ''
-            )
-            validated_data['utilisateur'] = utilisateur
+            # Créer le profil chômeur
+            chomeur = super().create(validated_data)
 
-        # Créer le profil chômeur
-        return super().create(validated_data)
+        # 🆕 Créer les compétences si fournies
+        if competences_ids:
+            from .models import ChomeurCompetence
+            from core.models import Competence
+            
+            # Limiter à 20 compétences maximum
+            competences_ids = competences_ids[:20]
+            
+            for comp_id in competences_ids:
+                try:
+                    competence = Competence.objects.get(id=comp_id)
+                    ChomeurCompetence.objects.create(
+                        chomeur=chomeur,
+                        competence=competence,
+                        niveau_maitrise='intermédiaire'  # Niveau par défaut
+                    )
+                except Competence.DoesNotExist:
+                    continue  # Ignorer les IDs invalides
+
+        return chomeur
 
 
 # Gardez les autres serializers inchangés
@@ -117,8 +147,13 @@ class ChomeurCompetenceSerializer(serializers.ModelSerializer):
         )
 
 
+# chomeur/serializers.py
+
 class ExploitSerializer(serializers.ModelSerializer):
     chomeur_nom = serializers.CharField(source='chomeur.utilisateur.nom_complet', read_only=True)
+    
+    # 🆕 Ajoutez cette ligne pour rendre chomeur optionnel en écriture
+    chomeur = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Exploit
@@ -132,4 +167,5 @@ class ExploitSerializer(serializers.ModelSerializer):
             'id', 'code_exploit', 'date_publication',
             'created_at', 'updated_at', 'created_by',
             'modified_by', 'chomeur_nom',
+            'chomeur',  # 🆕 Ajoutez chomeur en read_only
         )

@@ -90,3 +90,49 @@ class CurrentUserView(APIView):
         return Response({
             'errors': {'general': 'Non authentifié'}
         }, status=status.HTTP_401_UNAUTHORIZED)
+
+# core/views.py
+
+# ... (gardez tout votre code existant) ...
+
+# 🆕 Ajoutez ces imports en haut
+from rest_framework import generics, filters
+from .models import Competence
+from .serializers import CompetenceSerializer
+
+# 🆕 Ajoutez ces vues à la fin
+
+
+# ==========================
+#   GESTION DES COMPÉTENCES
+# ==========================
+class CompetenceListCreateView(generics.ListCreateAPIView):
+    """
+    Liste toutes les compétences disponibles ou en crée une nouvelle
+    GET/POST /core/competences/
+    """
+    queryset = Competence.objects.all().order_by('categorie', 'libelle')
+    serializer_class = CompetenceSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['libelle', 'categorie']
+    
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(created_by=self.request.user)
+        else:
+            serializer.save()
+
+
+class CompetenceDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Récupère, modifie ou supprime une compétence
+    GET/PUT/DELETE /core/competences/{id}/
+    """
+    queryset = Competence.objects.all()
+    serializer_class = CompetenceSerializer
+    
+    def perform_update(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(modified_by=self.request.user)
+        else:
+            serializer.save()

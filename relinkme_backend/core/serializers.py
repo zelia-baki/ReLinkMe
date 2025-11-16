@@ -1,7 +1,7 @@
 # core/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import Utilisateur
+from .models import Competence, Utilisateur
 
 
 class UtilisateurSerializer(serializers.ModelSerializer):
@@ -56,3 +56,41 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError({
                 'general': 'Email et mot de passe requis.'
             })
+            
+            
+# core/serializers.py
+
+# ... (gardez vos imports et serializers existants) ...
+
+# 🆕 Ajoutez ce serializer
+class CompetenceSerializer(serializers.ModelSerializer):
+    """
+    Serializer pour les compétences globales
+    """
+    created_by_name = serializers.CharField(
+        source='created_by.nom_complet', 
+        read_only=True
+    )
+    
+    class Meta:
+        model = Competence
+        fields = [
+            'id',
+            'code_competence',
+            'libelle',
+            'categorie',
+            'created_by',
+            'created_by_name',
+            'modified_by',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = (
+            'id', 
+            'code_competence', 
+            'created_at', 
+            'updated_at',
+            'created_by',
+            'modified_by',
+            'created_by_name'
+        )

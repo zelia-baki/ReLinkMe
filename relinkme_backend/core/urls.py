@@ -5,7 +5,10 @@ from .views import (
     UtilisateurListView,
     LoginView,
     LogoutView,
-    CurrentUserView
+    CurrentUserView,
+      # 🆕 Ajoutez ces imports
+    CompetenceListCreateView,
+    CompetenceDetailView,
 )
 
 urlpatterns = [
@@ -16,4 +19,7 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('me/', CurrentUserView.as_view(), name='current-user'),
+     # 🆕 Routes pour les compétences globales
+    path('competences/', CompetenceListCreateView.as_view(), name='competence-list-create'),
+    path('competences/<int:pk>/', CompetenceDetailView.as_view(), name='competence-detail'),
 ]

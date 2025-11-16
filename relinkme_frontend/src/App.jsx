@@ -20,15 +20,13 @@ function App() {
         <Route path="/chomeur/exploits" element={<ExploitsPage />} />
         <Route path="/chomeur/inscriptions" element={<InscriptionChomeur />} />
         <Route path="/connexion" element={<ConnexionPage />} />
-        <Route path="/recruteur" element={<InscriptionRecruteur />} />
-        {/* <Route path="/offres/publier" element={<PublierOffre />} /> */}
+        <Route path="/recruteur/inscription" element={<InscriptionRecruteur />} />
         <Route path="/recruteur/mesoffres" element={<MesOffres />} />  
         <Route path="/offres" element={<ListeOffres />} />
         <Route path="/offres/:id" element={<DetailOffre />} />
         {/* <Route path="/offres/publier" element={<RecruteurRoute><PublierOffre /></RecruteurRoute>} /> */}
         <Route path="/offres/publier" element={<PublierOffre />} />
         <Route path="/recruteur/mes-offres" element={<MesOffres />} />
-        {/* <Route path="/recruteur/mes-offres" element={<RecruteurRoute><MesOffres /></RecruteurRoute>} /> */}
 
       </Routes>
     </BrowserRouter>

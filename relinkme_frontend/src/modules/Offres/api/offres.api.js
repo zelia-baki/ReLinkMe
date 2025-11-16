@@ -1,4 +1,4 @@
-// modules/offres/api/offres.api.js
+// src/modules/Offres/api/offres.api.js
 import axios from "@/services/axiosInstance";
 
 /**
@@ -16,11 +16,10 @@ export const publierOffre = async (offreData) => {
 
 /**
  * 📋 Récupère toutes les offres du recruteur connecté
- * (Pour la page MesOffres - recruteur voit SEULEMENT ses offres)
  */
 export const getMesOffres = async () => {
   try {
-    const response = await axios.get("/recruteur/offres/");
+    const response = await axios.get("/api/recruteur/offres/");
     return response.data;
   } catch (error) {
     console.error("❌ Erreur récupération offres:", error.response?.data || error.message);
@@ -30,7 +29,6 @@ export const getMesOffres = async () => {
 
 /**
  * 🌐 Récupère toutes les offres publiques actives
- * (Pour la page ListeOffres - candidats voient TOUTES les offres)
  */
 export const getOffresPubliques = async (filters = {}) => {
   try {
@@ -44,7 +42,7 @@ export const getOffresPubliques = async (filters = {}) => {
 };
 
 /**
- * 🔍 Récupère une offre par ID (tout le monde peut voir une offre active)
+ * 🔍 Récupère une offre par ID
  */
 export const getOffreById = async (id) => {
   try {
@@ -57,7 +55,7 @@ export const getOffreById = async (id) => {
 };
 
 /**
- * ✏️ Met à jour une offre (SEULEMENT le propriétaire)
+ * ✏️ Met à jour une offre
  */
 export const updateOffre = async (id, offreData) => {
   try {
@@ -70,7 +68,7 @@ export const updateOffre = async (id, offreData) => {
 };
 
 /**
- * 🗑️ Supprime une offre (SEULEMENT le propriétaire)
+ * 🗑️ Supprime une offre
  */
 export const deleteOffre = async (id) => {
   try {
@@ -78,6 +76,40 @@ export const deleteOffre = async (id) => {
     return response.data;
   } catch (error) {
     console.error("❌ Erreur suppression offre:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+/**
+ * 🧠 Ajouter des compétences à une offre
+ */
+export const ajouterCompetences = async (competencesData) => {
+  try {
+    // Envoyer plusieurs compétences en une seule requête
+    const promises = competencesData.map(comp => 
+      axios.post("/recruteur/offres-competences/", comp)
+    );
+    await Promise.all(promises);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Erreur ajout compétences:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+/**
+ * 📝 Ajouter des tests de compétences
+ */
+export const ajouterTests = async (testsData) => {
+  try {
+    // Envoyer plusieurs tests en une seule requête
+    const promises = testsData.map(test => 
+      axios.post("/recruteur/tests-competences/", test)
+    );
+    await Promise.all(promises);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Erreur ajout tests:", error.response?.data || error.message);
     throw error;
   }
 };
@@ -101,5 +133,7 @@ export default {
   getOffreById,
   updateOffre,
   deleteOffre,
+  ajouterCompetences,
+  ajouterTests,
   checkIsRecruteur,
 };

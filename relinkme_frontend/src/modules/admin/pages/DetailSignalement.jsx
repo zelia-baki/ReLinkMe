@@ -1,16 +1,30 @@
 import React, { useEffect, useState } from 'react'
-import { getSingleDemande, getSingleUser, traiterDemande } from '../api/DemandeApi'
+import { getSingleUser,getSingleSignalement,traiterSignalement } from '../api/SignalementApi'
 import { useParams } from 'react-router-dom';
 import {SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
 
 const INITIAL_FORM_STATE = {
     statut: '',
-    motif_refus: '',
-    modified_by: 0
 };
-function DemandeConsulter() {
+const filterChoices = {
+    all : "Tout",
+    en_cours: "En cours",
+    en_attente: "En attente",
+    traite: "Traité",
+    rejete: "Rejeté"
+}
+const typeSignalement = {
+    profil_frauduleux: "Profil frauduleux",
+    contenu_inapproprie: "Contenu inappropié",
+    spam: "Spam",
+    harcelement: "Harcèlement",
+    fausse_offre: "Fausse offre",
+    autre: "Autre"
+}
+
+function DetailSignal() {
     const {id,idUtilisateur} = useParams() ;
-    const [demande,setDemande] = useState([]);
+    const [Signal,setSignal] = useState([]);
     const [userData,setUserData] = useState([]);
     const [writeMotif,setWriteMotif] = useState(false);
     const [modifiedBy,setModifiedBy] = useState(0);
@@ -21,21 +35,20 @@ function DemandeConsulter() {
     }
      const [formData, setFormData] = useState({
         statut: '',
-        motif_refus: '',
-        modified_by: adminData["idAdmin"]
+        decision:''
     })
 
     useEffect(()=>{
-        fetchDemande(id,{code_admin:adminData["codeAdmin"]});
+        fetchSignal(id,{code_admin:adminData["codeAdmin"]});
         fetchUser(idUtilisateur);
     },[])
 
-    const resetDemande = () => {
+    const resetSignal = () => {
         setFormData(INITIAL_FORM_STATE)
     }
-    const fetchDemande = async (idDmd,body) => {
-             const data = await getSingleDemande(idDmd,body);
-            setDemande(data.list);
+    const fetchSignal = async (idLoc,body) => {
+             const data = await getSingleSignalement(idLoc,body);
+            setSignal(data.list);
                     console.log(data.list);
     };
     const fetchUser = async (id) => {
@@ -44,54 +57,51 @@ function DemandeConsulter() {
         console.log(data.list[0]);
 
     }
-    const modifyDemande = async (form) => {
-        const data = await traiterDemande(id,adminData['idAdmin'],form)
-        fetchDemande(id,{code_admin:adminData["codeAdmin"]});
+    const modifySignal = async (form) => {
+        const data = await traiterSignalement(id,adminData['idAdmin'],form)
+        fetchSignal(id,{code_admin:adminData["codeAdmin"]});
         
     }
     const handleChange = (e) => {
     setFormData(prev => ({
         ...prev,
-        motif_refus: e.target.value,
-        statut: "refusee"
+        decision: e.target.value,
+        statut: "rejete"
     }))
-};
-    const reject = () => {
+    }
+     const accept = () => {
         setWriteMotif(!writeMotif)
         console.log("clicked")
     }
+
     const confirm = () => {
         const updated = {
         ...formData,
-        statut: "refusee"
-    };
-        const data = modifyDemande(updated);
-        resetDemande();
+        statut: "traite"
+        };
+        const data = modifySignal(updated);
+        resetSignal();
         setWriteMotif(!writeMotif);
-        fetchDemande(id,{code_admin:adminData["codeAdmin"]});
+        fetchSignal(id,{code_admin:adminData["codeAdmin"]});
     }
-    const approve = () => {
-         const updated = {
+    const reject = () => {
+        const updated = {
         ...formData,
-        statut: "approuvee"
-        
-    };
+        statut: "rejete",
 
-        const data = modifyDemande(updated);
-        
-        resetDemande();
-        fetchDemande(id,{code_admin:adminData["codeAdmin"]});
+        };
+        const data = modifySignal(updated);
+        resetSignal();
+        fetchSignal(id,{code_admin:adminData["codeAdmin"]});
     }
-    
-    
     const cancel = () => {
         setWriteMotif(!writeMotif);
-        resetDemande();
+        resetSignal();
     }
-
+    
   return (
     <div className='right-pane'>
-        <h2>Demande de vérification</h2>
+        <h2>Signalement de contenu</h2>
         <div className='navigation-part'>
             <div className='previous'>
                 <button>
@@ -100,7 +110,7 @@ function DemandeConsulter() {
             </div>
             <div className='identite'>
                 <div>
-                    <div>{userData.nom_complet}</div>
+                    <div>Signalé: {userData.nom_complet}</div>
 
                 </div>
                 <div>Code utilisateur: {userData.code_utilisateur}</div>
@@ -115,20 +125,18 @@ function DemandeConsulter() {
         
         <hr></hr>
         <div className='action'>
+            <div>{filterChoices[Signal.statut]}</div>
+                
             {
-                (demande.statut == 'approuvee') ? 
-                <div>Approuvée</div>
-                : 
+                (Signal.statut != 'rejete') &&
+                
                 <>
-                <div>
-                    {demande.statut}
-                </div>
                 <div style={{ visibility: !writeMotif ? "visible" : "hidden" }}>
-                    <button onClick={approve}>
-                        <Check size={18} strokeWidth={1.25} /> Approuver
+                    <button onClick={accept}>
+                        <Check size={18} strokeWidth={1.25} /> Accepter
                     </button>
                     <button onClick={reject}>
-                        <X size={18} strokeWidth={1.25} /> Refuser
+                        <X size={18} strokeWidth={1.25} /> Rejeter
                     </button>
                 </div>
                 </>
@@ -148,22 +156,28 @@ function DemandeConsulter() {
                         </thead>
                         <tbody>
                         <tr>
-                            <td className='label'>Code demande </td>
+                            <td className='label'>Code Signalement </td>
                             <td>:</td>
-                            <td>{demande.code_demande}</td>
+                            <td>{Signal.code_signalement}</td>
                         </tr>
                         <tr>
-                            <td className='label'>Type de vérification </td>
+                            <td className='label'>Type </td>
                             <td>:</td>
-                            <td>{demande.type_verification}</td>
+                            <td>{typeSignalement[Signal.type_signalement]}</td>
                         </tr>
                         <tr>
-                            <td className='label'>Motif de refus </td>
+                            <td className='label'>Description </td>
+                            <td>:</td>
+                            <td>{Signal.description}</td>
+                            
+                        </tr>
+                        <tr>
+                            <td className='label'>Décision </td>
                             <td>:</td>
                             {
                                 writeMotif ? 
                                 <td>
-                                    <input type="text" name="motif_refus" value={formData.motif_refus} onChange={handleChange}/>
+                                    <input type="text" name="motif_refus" value={formData.decision} onChange={handleChange}/>
                                     <div>
                                         <button onClick={cancel}>
                                             Annuler
@@ -174,46 +188,71 @@ function DemandeConsulter() {
                                     </div>
                                 </td>
                                 :
-                                <td>{(demande.motif_refus == "") ? "Aucun" : demande.motif_refus}</td>
+                                <td>{(Signal.decision == null) ? "Aucune" : Signal.decision}</td>
                             }
                             
                         </tr>
                         <tr>
-                            <td className='label'>Date de soumission </td>
+                            <td className='label'>Auteur signalement </td>
                             <td>:</td>
-                            <td>{demande.date_soumission}</td>
+                            <td>{Signal.id_signaleur}</td>
                         </tr>
                         <tr>
-                            <td className='label'>Date de traitement </td>
+                            <td className='label'>Date signalement </td>
                             <td>:</td>
-                            <td>{demande.date_traitement}</td>
+                            <td>{Signal.date_signalement}</td>
+                        </tr>
+                        <tr>
+                            <td className='label'>Date traitement  </td>
+                            <td>:</td>
+                            <td>{Signal.date_traitement}</td>
+                        </tr>
+                        <tr>
+                            <td className='label'>Offre </td>
+                            <td>:</td>
+                            <td>{Signal.id_offre}</td>
+                        </tr>
+                        <tr>
+                            <td className='label'>Exploit</td>
+                            <td>:</td>
+                            <td>{Signal.id_exploit}</td>
+                        </tr>
+                        <tr>
+                            <td className='label'>Responsable </td>
+                            <td>:</td>
+                            <td>{Signal.id_admin_responsable}</td>
                         </tr>
                         <tr>
                             <td className='label'>Créé par </td>
                             <td>:</td>
-                            <td>{userData.email}</td>
+                            <td>{Signal.created_by}</td>
                         </tr>
                         <tr>
                             <td className='label'>Créé le </td>
                             <td>:</td>
-                            <td>{demande.created_at}</td>
+                            <td>{Signal.created_at}</td>
                         </tr>
                         <tr>
                             <td className='label'>Modifié par </td>
                             <td>:</td>
-                            <td>{demande.modified_by}</td>
+                            <td>{Signal.modified_by}</td>
                         </tr>
                         <tr>
                             <td className='label'>Modifié le </td>
                             <td>:</td>
-                            <td>{demande.updated_at}</td>
+                            <td>{Signal.updated_at}</td>
                         </tr>
                     </tbody>
                     </table>
                 </div>
             </div>
             <div className='pece-justificative'>
-
+                <iframe
+                    style={{border:0,width:"100%",height:"800px"}}
+                    loading="lazy"
+                    allowFullScreen
+                    src={Signal.preuves_url}>
+                </iframe>
             </div>
         </div>
 
@@ -221,4 +260,4 @@ function DemandeConsulter() {
   )
 }
 
-export default DemandeConsulter
+export default DetailSignal

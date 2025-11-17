@@ -19,6 +19,8 @@ import DetailCandidature from '@/modules/candidatures/pages/DetailCandidature';
 import DemandeConsulter from "./modules/admin/pages/DemandeConsulter";
 import DemandeLocalisation from "./modules/admin/pages/DemandeLoc";
 import DetailLoc from "./modules/admin/pages/DetailLoc";
+import Signalement from "./modules/admin/pages/Signalement";
+import DetailSignal from "./modules/admin/pages/DetailSignalement";
 
 function App() {
   return (
@@ -34,6 +36,8 @@ function App() {
         <Route path="admin/demande/:id/:idUtilisateur" element={<DemandeConsulter/>}/>
         <Route path="admin/localisation" element={<DemandeLocalisation/>}/>
         <Route path="admin/localisation/:id/:idUtilisateur" element={<DetailLoc/>}/>
+        <Route path="admin/signalement" element={<Signalement/>}/>
+        <Route path="admin/signalement/:id/:idUtilisateur" element={<DetailSignal/>}/>
         <Route path="/recruteur/inscription" element={<InscriptionRecruteur />} />
         <Route path="/recruteur/mesoffres" element={<MesOffres />} />
         <Route path="/offres" element={<ListeOffres />} />

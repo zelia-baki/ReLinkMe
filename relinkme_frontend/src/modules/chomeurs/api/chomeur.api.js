@@ -44,3 +44,50 @@ export const deleteChomeur = async (id) => {
   const { data } = await axios.delete(`/chomeur/chomeurs/${id}/`);
   return data;
 };
+
+export const getMonProfil = async () => {
+  const { data } = await axios.get("/chomeur/mon-profil/");
+  return data;
+};
+
+// 🆕 Récupérer mes compétences
+export const getMesCompetences = async () => {
+  const { data } = await axios.get("/chomeur/mes-competences/");
+  return data;
+};
+
+// 🆕 Ajouter une compétence
+export const ajouterCompetence = async (competenceData) => {
+  const { data } = await axios.post("/chomeur/mes-competences/", competenceData);
+  return data;
+};
+
+// 🆕 Supprimer une compétence
+export const supprimerCompetence = async (id) => {
+  const { data } = await axios.delete(`/chomeur/competences/${id}/`);
+  return data;
+};
+
+// 🆕 Récupérer mes exploits
+export const getMesExploits = async () => {
+  const { data } = await axios.get("/chomeur/mes-exploits/");
+  return data;
+};
+
+// 🆕 Ajouter un exploit
+export const ajouterExploit = async (exploitData) => {
+  const { data } = await axios.post("/chomeur/mes-exploits/", exploitData);
+  return data;
+};
+
+// 🆕 Modifier un exploit
+export const modifierExploit = async (id, exploitData) => {
+  const { data } = await axios.put(`/chomeur/exploits/${id}/`, exploitData);
+  return data;
+};
+
+// 🆕 Supprimer un exploit
+export const supprimerExploit = async (id) => {
+  const { data } = await axios.delete(`/chomeur/exploits/${id}/`);
+  return data;
+};

@@ -6,6 +6,16 @@ import InscriptionChomeur from "@/modules/chomeurs/pages/InscriptionChomeur";
 import ConnexionPage from "./modules/core/pages/ConnexionCore";
 import Admin from "./modules/admin/pages/Admin";
 import Demande from "./modules/admin/pages/Demande";
+import InscriptionRecruteur from "./modules/recruteur/pages/InscriptionRecruteur";
+import PublierOffre from "./modules/Offres/pages/PublierOffre";
+import MesOffres from "./modules/Offres/pages/MesOffres";
+import ListeOffres from "./modules/Offres/pages/ListeOffres";
+import DetailOffre from "./modules/Offres/pages/DetailOffre";
+import RecruteurRoute from "./components/routes/RecruteurRoute";
+import PostulerOffre from '@/modules/candidatures/pages/PostulerOffre';
+import MesCandidatures from '@/modules/candidatures/pages/MesCandidatures';
+import CandidaturesRecues from '@/modules/candidatures/pages/CandidaturesRecues';
+import DetailCandidature from '@/modules/candidatures/pages/DetailCandidature';
 
 function App() {
   return (
@@ -18,6 +28,22 @@ function App() {
         <Route path="/connexion" element={<ConnexionPage />} />
         <Route path="/admin" element={<Admin/>}/>
         <Route path="admin/demande" element={<Demande/>}/>
+        <Route path="/recruteur/inscription" element={<InscriptionRecruteur />} />
+        <Route path="/recruteur/mesoffres" element={<MesOffres />} />
+        <Route path="/offres" element={<ListeOffres />} />
+        <Route path="/offres/:id" element={<DetailOffre />} />
+        {/* <Route path="/offres/publier" element={<RecruteurRoute><PublierOffre /></RecruteurRoute>} /> */}
+        <Route path="/offres/publier" element={<PublierOffre />} />
+        <Route path="/recruteur/mes-offres" element={<MesOffres />} />
+
+        <Route path="/candidatures/:offreId" element={<PostulerOffre />} />
+        <Route path="/chomeur/candidatures" element={<MesCandidatures />} />
+        <Route path="/chomeur/candidatures/:id" element={<DetailCandidature />} />
+
+// Routes Recruteur
+        <Route path="/recruteur/candidatures" element={<CandidaturesRecues />} />
+        <Route path="/recruteur/candidatures/:id" element={<DetailCandidature />} />
+
       </Routes>
     </BrowserRouter>
   );

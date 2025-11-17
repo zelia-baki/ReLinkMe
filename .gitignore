@@ -129,7 +129,6 @@ env.bak/
 venv.bak/
 
 # Migrations
-migrations/
 !migrations/versions/
 *.pyc
 *.pyo

@@ -15,10 +15,14 @@ function Demande() {
     const navigate = useNavigate()
     const [listDemande,setListDemande] = useState([])
     const [filter,setFilter] = useState("all")
+    const adminInfo = {
+        codeAdmin: "ADM00015",
+        idAdmin:15
+    }
     const [codeAdmin,setCodeAdmin] = useState("ADM00015")
 
     useEffect(()=>{
-        fetchListDemande(filter,{code_admin:codeAdmin})
+        fetchListDemande(filter,{code_admin:adminInfo["codeAdmin"]})
     },[])
 
     const fetchListDemande = async (filter,body) => {
@@ -30,8 +34,8 @@ function Demande() {
         setFilter(e.target.value);
         fetchListDemande(e.target.value,{code_admin:codeAdmin})
     };
-    const VoirPlus = (idDemande) =>{
-        navigate(`/admin/demande/${idDemande}`);
+    const VoirPlus = (idDemande,idUtilisateur) =>{
+        navigate(`/admin/demande/${idDemande}/${idUtilisateur}`);
     }
   return (
     <div className='right-pane'>
@@ -92,7 +96,7 @@ function Demande() {
                                 <td>{demande.created_by}</td>
                                 <td>{demande.created_at}</td>
                                 <td>
-                                    <button onClick={()=>VoirPlus(demande.id)}>
+                                    <button onClick={()=>VoirPlus(demande.id,demande.id_utilisateur)}>
                                        <Eye size={20} strokeWidth={1.25} /> Voir plus
                                     </button>
                                 </td>

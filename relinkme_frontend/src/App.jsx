@@ -29,7 +29,7 @@ function App() {
         <Route path="/connexion" element={<ConnexionPage />} />
         <Route path="/admin" element={<Admin/>}/>
         <Route path="admin/demande" element={<Demande/>}/>
-        <Route path="admin/demande/:id" element={<DemandeConsulter/>}/>
+        <Route path="admin/demande/:id/:idUtilisateur" element={<DemandeConsulter/>}/>
         <Route path="/recruteur/inscription" element={<InscriptionRecruteur />} />
         <Route path="/recruteur/mesoffres" element={<MesOffres />} />
         <Route path="/offres" element={<ListeOffres />} />

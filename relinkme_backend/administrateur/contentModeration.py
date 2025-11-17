@@ -10,8 +10,10 @@ def text_content_moderation(value):
         'Personal General Social Media Post',
         'General Business News or Market Update',
         'Non-Job related Marketing or Sales Pitch',
-        'Religious or political opinion',
-        'Harmful and sexual content'
+        'Political opinion',
+        "Not work-related Religious opinion",
+        'Harmful and sexual content',
+
     ]
     candidate_label = [
         'Career and Professional Content, Achievements, or Job Listings',
@@ -31,7 +33,7 @@ def text_content_moderation(value):
         "Other / Irrelevant"
     ]
 
-    result = GLOBAL_CLASSIFIER(sequence_to_classify,labels, multi_label=False)
+    result = GLOBAL_CLASSIFIER(sequence_to_classify,candidate_labels, multi_label=False)
     top_class = result['labels'][0]
     top_score = result['scores'][0]
     target_class = 'Career and Professional Content, Achievements, or Job Listings'

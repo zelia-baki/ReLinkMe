@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from core.models import Utilisateur
 from .models import Administrateur, DemandeVerification, HistoriqueValidation, VerificationLocalisation, Signalement
 
 
@@ -29,4 +31,9 @@ class SignalementSerializer(serializers.ModelSerializer):
     class Meta:
         model= Signalement
         fields = '__all__'
-        readn_only_fields = ['id','code_signalement','created_at']
+        read_only_fields = ['id','code_signalement','created_at']
+
+class UtilisateurSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Utilisateur
+        fields = ['id', 'nom_complet', 'photo_profil']

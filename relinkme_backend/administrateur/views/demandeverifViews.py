@@ -1,8 +1,10 @@
 from datetime import datetime
 from django.db import transaction
+from django.utils import timezone
+
 from core.models import Utilisateur
-from administrateur.models import DemandeVerification, Administrateur, HistoriqueValidation
-from administrateur.serializers import DemandeVerificationSerializer
+from administrateur.models import DemandeVerification, Administrateur, HistoriqueValidation, VerificationLocalisation
+from administrateur.serializers import DemandeVerificationSerializer, VerifLocationSerializer,UtilisateurVerificationSerializers
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -24,7 +26,7 @@ def create_demande_verif(request,id_utilisateur):
         return Response({
             "success": True,
             "message": "Demande envoyé avec succès",
-            "demande" : DemandeVerificationSerializer(demande).data
+            "data" : DemandeVerificationSerializer(demande).data
         }, status=status.HTTP_201_CREATED)
 
     except Utilisateur.DoesNotExist:
@@ -85,8 +87,8 @@ def traiter_demande(request,id_demande_traiter,id_admin_responsable):
 
         return Response({
             "success": True,
-            "message": "Demande envoyé avec succès",
-            "demande": DemandeVerificationSerializer(demande_traiter).data
+            "message": "Demande traité avec succès",
+            "data": DemandeVerificationSerializer(demande_traiter).data
         }, status=status.HTTP_200_OK)
 
     except Utilisateur.DoesNotExist:
@@ -107,13 +109,13 @@ def lister_demandes(request):
     try:
         statut= request.query_params.get('statut')
         code_admin = request.data.get('code_admin')
-        admin_role = Administrateur.objects.get(code=code_admin).niveau_autorisation
+        admin_role = Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
 
         if admin_role == "admin_moderation":
             return Response({
                 "success": False,
                 "message": "Cet utilisateur n'est pas autorisé à consulter",
-                "demande": []
+                "data": []
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         match statut:
@@ -131,7 +133,7 @@ def lister_demandes(request):
         return Response({
             "success": True,
             "message": "",
-            "demande": DemandeVerificationSerializer(list_demande,many=True).data
+            "list": DemandeVerificationSerializer(list_demande,many=True).data
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -141,4 +143,192 @@ def lister_demandes(request):
             "error": e.__class__.__name__
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['POST'])
+def single_demande(request,demande_id):
+    try:
+        code_admin = request.data.get('code_admin')
+        admin_role = Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
+
+        if admin_role == "admin_moderation":
+            return Response({
+                "success": False,
+                "message": "Cet utilisateur n'est pas autorisé à consulter",
+                "data": []
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        list_demande = DemandeVerification.objects.get(id=demande_id)
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": DemandeVerificationSerializer(list_demande).data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ==========================
+#   DEMANDE VERIFICATION LOCALISATION
+# ==========================
+@api_view(['GET'])
+def list_verif_location(request, code_admin):
+    try:
+        statut = request.query_params.get('statut')
+        admin_role = Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
+
+
+        if admin_role == "admin_moderation":
+            return Response({
+                "success": False,
+                "message": "Cet utilisateur n'est pas autorisé à consulter",
+                "demande": []
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        match statut:
+            case 'all':
+                list_loc = VerificationLocalisation.objects.all()
+            case 'verifie':
+                list_loc = VerificationLocalisation.objects.filter(statut='verifie')
+            case 'refuse':
+                list_loc = VerificationLocalisation.objects.filter(statut='refuse')
+            case _:
+                list_loc = VerificationLocalisation.objects.filter(statut='en_attente')
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": VerifLocationSerializer(list_loc, many=True).data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def single_loc(request,demande_id):
+    try:
+        code_admin = request.data.get('code_admin')
+        admin_role = Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
+
+        if admin_role == "admin_moderation":
+            return Response({
+                "success": False,
+                "message": "Cet utilisateur n'est pas autorisé à consulter",
+                "data": []
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        list_demande = VerificationLocalisation.objects.get(id=demande_id)
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": VerifLocationSerializer(list_demande).data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def create_location(request, id_utilisateur):
+    try:
+        user_data= {
+            'id_utilisateur': id_utilisateur,
+            'statut': 'en_attente'
+        }
+        location = VerificationLocalisation()
+        location.create_verif_loc(user_data)
+        return Response({
+            "success": True,
+            "message": "",
+            "data": VerifLocationSerializer(location).data
+        }, status=status.HTTP_200_OK)
+
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def update_verif_loc(request, id_verif_loc, id_admin_verif):
+    try:
+        # --- Fetch main objects ---
+        admin_verif = Administrateur.objects.get(id=id_admin_verif)
+        verif_loc = VerificationLocalisation.objects.get(id=id_verif_loc)
+
+        # --- Permissions ---
+        if admin_verif.niveau_autorisation == "admin_moderation":
+            return Response({
+                "success": False,
+                "message": "Cet utilisateur n'est pas autorisé à effectuer cette action"
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # --- Validate statut ---
+        statut = request.data.get("statut")
+
+        # Mapping statut → action stored in history
+        action_map = {
+            "verifie": "validation_compte",
+            "refuse": "refus_compte"
+        }
+        action = action_map.get(statut)
+        # --- Update verif_loc object ---
+        verif_loc.statut = statut
+        verif_loc.modified_by = admin_verif.utilisateur
+        verif_loc.date_verification=timezone.now()
+        # --- Atomic operation ---
+        with transaction.atomic():
+            verif_loc.save()
+
+            history_data = {
+                'id_admin': admin_verif.id,
+                'id_utilisateur_cible': verif_loc.id_utilisateur.id,
+                'type_action': action_map[statut],
+                'table_concernee': VerificationLocalisation._meta.db_table,
+                'id_enregistrement': verif_loc.id,
+                'details': f"{action_map[statut]} de localisation"
+            }
+
+            history = HistoriqueValidation()
+            history.create_history_object(history_data)
+
+        return Response({
+            "success": True,
+            "message": "Vérification effectuée avec succès",
+            "data": VerifLocationSerializer(verif_loc).data
+        }, status=status.HTTP_200_OK)
+
+    except Administrateur.DoesNotExist:
+        return Response({
+            "success": False,
+            "message": "Administrateur introuvable"
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    except VerificationLocalisation.DoesNotExist:
+        return Response({
+            "success": False,
+            "message": "Demande de vérification introuvable"
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        # Final fallback for unexpected errors
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

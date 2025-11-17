@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Administrateur, DemandeVerification, HistoriqueValidation
+
+from core.models import Utilisateur
+from .models import Administrateur, DemandeVerification, HistoriqueValidation, VerificationLocalisation, Signalement
 
 
 class AdministrateurSerializer(serializers.ModelSerializer):
@@ -17,4 +19,26 @@ class HistoriqueSerializer(serializers.ModelSerializer):
     class Meta:
         model = HistoriqueValidation
         fields= '__all__'
-        read_only_fields= ['id','code_historique','id_admin','id_utilisateur_cible', 'type_action','table_concernee','id_enregistrement','details','date_action','created_at']
+        read_only_fields= '__all__'
+
+class VerifLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VerificationLocalisation
+        fields = '__all__'
+        read_only_fields = ['id','code_verification','date_verification']
+
+class SignalementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model= Signalement
+        fields = '__all__'
+        read_only_fields = ['id','code_signalement','created_at']
+
+class UtilisateurSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Utilisateur
+        fields = ['id', 'nom_complet', 'photo_profil','localisation']
+
+class UtilisateurVerificationSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Utilisateur
+        fields = ['code_utilisateur', 'nom_complet', 'email']

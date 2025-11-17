@@ -102,7 +102,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'Africa/Abidjan'  # ou ton fuseau horaire
 USE_I18N = True
-USE_TZ = True
+USE_TZ = False
 
 
 # --- STATIC FILES ---

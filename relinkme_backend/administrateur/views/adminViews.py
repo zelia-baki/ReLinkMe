@@ -1,19 +1,25 @@
 from django.shortcuts import render
 from administrateur.models import Administrateur
 from core.models import Utilisateur
-from administrateur.serializers import AdministrateurSerializer
+from administrateur.serializers import AdministrateurSerializer, UtilisateurSerializers, \
+    UtilisateurVerificationSerializers
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.utils import timezone
+
 
 CUSTOM_ERROR_MESSAGES = {
     'DoesNotExist': "Cet utilisateur n'existe pas",
     'IntegrityError': "Conflit de données dans la base.",
     'ValidationError': "Les données fournies sont invalides.",
 }
+
+#create/<int:id_utilisateur>/<int:id_admin>
 @api_view(['POST'])
 def create_admin(request, id_utilisateur, id_admin=0):
     try:
+        print("TIMEZONE NOW:", timezone.now(), type(timezone))
         utilisateur = Utilisateur.objects.get(id=id_utilisateur)
         is_admin = Administrateur.objects.filter(utilisateur=utilisateur).first()
 
@@ -47,7 +53,7 @@ def create_admin(request, id_utilisateur, id_admin=0):
             "message": "Administrateur créé avec succès",
         }, status=status.HTTP_201_CREATED)
 
-    except utilisateur.DoesNotExist:
+    except Utilisateur.DoesNotExist:
         return Response({
             "success": False,
             "message": "Utilisateur introuvable"
@@ -60,7 +66,7 @@ def create_admin(request, id_utilisateur, id_admin=0):
             "error": e.__class__.__name__
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
+#delete/<str:code_admin>
 @api_view(['POST'])
 def delete_admin(request,code_admin):
     try:
@@ -74,6 +80,7 @@ def delete_admin(request,code_admin):
         return Response({"success": False, "message": message, "error": error_type},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+#update/<str:code_admin>/<str:code_manipulator>
 @api_view(['POST'])
 def update_admin(request, code_admin, code_manipulator):
     try:
@@ -126,6 +133,8 @@ def update_admin(request, code_admin, code_manipulator):
         message = CUSTOM_ERROR_MESSAGES.get(error_type, str(e))
         return Response({"success": False, "message": message, "error": error_type},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#list
 @api_view(['GET'])
 def get_list_admin(request):
     try:
@@ -139,6 +148,7 @@ def get_list_admin(request):
         return Response({"success": False, "message": message, "error": error_type},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+#<str:code_admin>
 @api_view(['GET'])
 def get_single_administrator(request,code_admin):
     try:
@@ -151,3 +161,34 @@ def get_single_administrator(request,code_admin):
         message = CUSTOM_ERROR_MESSAGES.get(error_type, str(e))
         return Response({"success": False, "message": message, "error": error_type},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_users(request):
+    try:
+        list_user = Utilisateur.objects.values('id','nom_complet','photo_profil')
+        return Response({"success": True, "message": '', "list": UtilisateurSerializers(list_user,many=True).data},
+                    status=status.HTTP_200_OK)
+
+    except Exception as e:
+        error_type = e.__class__.__name__
+        message = CUSTOM_ERROR_MESSAGES.get(error_type, str(e))
+        return Response({"success": False, "message": message, "error": error_type},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_single_user(request,id_utilisateur):
+    try:
+        user= Utilisateur.objects.filter(id=id_utilisateur).values('code_utilisateur','nom_complet','email','localisation')
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": UtilisateurVerificationSerializers(user,many=True).data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

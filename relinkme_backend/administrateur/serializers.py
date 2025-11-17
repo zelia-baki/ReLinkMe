@@ -36,4 +36,9 @@ class SignalementSerializer(serializers.ModelSerializer):
 class UtilisateurSerializers(serializers.ModelSerializer):
     class Meta:
         model = Utilisateur
-        fields = ['id', 'nom_complet', 'photo_profil']
+        fields = ['id', 'nom_complet', 'photo_profil','localisation']
+
+class UtilisateurVerificationSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Utilisateur
+        fields = ['code_utilisateur', 'nom_complet', 'email']

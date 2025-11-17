@@ -12,7 +12,8 @@ urlpatterns= [
     path('signalement/traitement/<int:id_signalement>/<int:id_admin_responsable>',traiter_signalement),
     path('signalement/delete/<int:id_signalement>',delete_admin),
     path('signalement/liste',lister_signalement),
-    path('users',get_users)
+    path('users',get_users),
+    path('user/<int:id_utilisateur>',get_single_user)
 
 
 ]

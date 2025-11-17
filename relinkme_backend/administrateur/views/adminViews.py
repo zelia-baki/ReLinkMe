@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from administrateur.models import Administrateur
 from core.models import Utilisateur
-from administrateur.serializers import AdministrateurSerializer, UtilisateurSerializers
+from administrateur.serializers import AdministrateurSerializer, UtilisateurSerializers, \
+    UtilisateurVerificationSerializers
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -173,3 +174,21 @@ def get_users(request):
         message = CUSTOM_ERROR_MESSAGES.get(error_type, str(e))
         return Response({"success": False, "message": message, "error": error_type},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_single_user(request,id_utilisateur):
+    try:
+        user= Utilisateur.objects.filter(id=id_utilisateur).values('code_utilisateur','nom_complet','email','localisation')
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": UtilisateurVerificationSerializers(user,many=True).data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from core.models import Utilisateur
 from administrateur.models import DemandeVerification, Administrateur, HistoriqueValidation, VerificationLocalisation
-from administrateur.serializers import DemandeVerificationSerializer, VerifLocationSerializer
+from administrateur.serializers import DemandeVerificationSerializer, VerifLocationSerializer,UtilisateurVerificationSerializers
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -133,7 +133,35 @@ def lister_demandes(request):
         return Response({
             "success": True,
             "message": "",
-            "demande": DemandeVerificationSerializer(list_demande,many=True).data
+            "list": DemandeVerificationSerializer(list_demande,many=True).data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def single_demande(request,demande_id):
+    try:
+        code_admin = request.data.get('code_admin')
+        admin_role = Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
+
+        if admin_role == "admin_moderation":
+            return Response({
+                "success": False,
+                "message": "Cet utilisateur n'est pas autorisé à consulter",
+                "data": []
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        list_demande = DemandeVerification.objects.get(id=demande_id)
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": DemandeVerificationSerializer(list_demande).data
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -147,7 +175,7 @@ def lister_demandes(request):
 # ==========================
 #   DEMANDE VERIFICATION LOCALISATION
 # ==========================
-@api_view(['POST'])
+@api_view(['GET'])
 def list_verif_location(request, code_admin):
     try:
         statut = request.query_params.get('statut')
@@ -174,7 +202,7 @@ def list_verif_location(request, code_admin):
         return Response({
             "success": True,
             "message": "",
-            "data": VerifLocationSerializer(list_loc, many=True).data
+            "list": VerifLocationSerializer(list_loc, many=True).data
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -184,6 +212,33 @@ def list_verif_location(request, code_admin):
             "error": e.__class__.__name__
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['POST'])
+def single_loc(request,demande_id):
+    try:
+        code_admin = request.data.get('code_admin')
+        admin_role = Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
+
+        if admin_role == "admin_moderation":
+            return Response({
+                "success": False,
+                "message": "Cet utilisateur n'est pas autorisé à consulter",
+                "data": []
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        list_demande = VerificationLocalisation.objects.get(id=demande_id)
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": VerifLocationSerializer(list_demande).data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def create_location(request, id_utilisateur):
@@ -225,17 +280,16 @@ def update_verif_loc(request, id_verif_loc, id_admin_verif):
         # --- Validate statut ---
         statut = request.data.get("statut")
 
-
         # Mapping statut → action stored in history
         action_map = {
             "verifie": "validation_compte",
             "refuse": "refus_compte"
         }
-
+        action = action_map.get(statut)
         # --- Update verif_loc object ---
         verif_loc.statut = statut
         verif_loc.modified_by = admin_verif.utilisateur
-        verif_loc(date_verification=timezone.now())
+        verif_loc.date_verification=timezone.now()
         # --- Atomic operation ---
         with transaction.atomic():
             verif_loc.save()

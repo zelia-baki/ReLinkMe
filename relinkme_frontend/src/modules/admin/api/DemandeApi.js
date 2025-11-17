@@ -43,10 +43,27 @@ export const  getSingleUser = async (idUser) => {
   }
 }
 
-
-export const getAllLocListe = async (code_admin) => {
+export const traiterDemande = async (id_demande,idAdmin,formData) => {
        try {
-    const { data } = await axios.get(`demande/localisation/liste/${code_admin}`)
+    const { data } = await axios.post(`demande/traitement/${id_demande}/${idAdmin}`,formData)
+    return data;
+  } catch (error) {
+    console.error("Erreur :", error.response?.data || error.message);
+    throw error;
+  }
+}
+export const getAllLocListe = async (code_admin,statut) => {
+       try {
+    const { data } = await axios.get(`demande/localisation/liste/${code_admin}?statut=${statut}`)
+    return data;
+  } catch (error) {
+    console.error("Erreur :", error.response?.data || error.message);
+    throw error;
+  }
+}
+export const  getSingleLoc = async (idLoc,payload) => {
+    try {
+    const { data } = await axios.post(`demande/localisation/${idLoc}`,payload)
     return data;
   } catch (error) {
     console.error("Erreur :", error.response?.data || error.message);
@@ -66,11 +83,9 @@ export const creation_loc = async (id_utilisateur, payload) => {
     throw error;
   }
 };
-
-
-export const traiterDemande = async (id_demande,idAdmin,formData) => {
+export const traiterLocalisation = async (idLoc,idAdmin,formData) => {
        try {
-    const { data } = await axios.post(`demande/traitement/${id_demande}/${idAdmin}`,formData)
+    const { data } = await axios.post(`demande/localisation/traitement/${idLoc}/${idAdmin}`,formData)
     return data;
   } catch (error) {
     console.error("Erreur :", error.response?.data || error.message);

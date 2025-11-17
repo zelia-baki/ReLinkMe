@@ -2,24 +2,9 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-<<<<<<< HEAD
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import viewsets, status, filters
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import action
-from .models import Competence
-from .serializers import CompetenceSerializer
-from .models import Utilisateur
-from .serializers import UtilisateurSerializer, LoginSerializer
-from rest_framework import generics, filters
-from .models import Competence
-from .serializers import CompetenceSerializer
-=======
-from rest_framework import status, generics
+from rest_framework import status, generics, viewsets, filters
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Count
 
@@ -28,14 +13,13 @@ from .serializers import (
     UtilisateurSerializer, 
     LoginSerializer, 
     CompetenceSerializer,
-    # 🆕 Nouveaux serializers
+    # Nouveaux serializers
     CandidatureListSerializer,
     CandidatureDetailSerializer,
     CandidatureCreateSerializer,
     CandidatureUpdateSerializer,
 )
 
->>>>>>> 8ad9ac1453190eadc16f4f645feb97f7200b1a8d
 
 class HelloView(APIView):
     def get(self, request):
@@ -129,6 +113,7 @@ class CompetenceListCreateView(generics.ListCreateAPIView):
     serializer_class = CompetenceSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['libelle', 'categorie']
+    permission_classes = [AllowAny]  # Accessible sans authentification
     
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -150,7 +135,7 @@ class CompetenceDetailView(generics.RetrieveUpdateDestroyAPIView):
             serializer.save(modified_by=self.request.user)
         else:
             serializer.save()
-<<<<<<< HEAD
+
 
 class CompetenceViewSet(viewsets.ModelViewSet):
     """
@@ -202,6 +187,8 @@ class CompetenceViewSet(viewsets.ModelViewSet):
             categories[cat].append(CompetenceSerializer(comp).data)
         
         return Response(categories)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def competences_disponibles_pour_chomeur(request):
@@ -211,8 +198,7 @@ def competences_disponibles_pour_chomeur(request):
     """
     try:
         # Récupérer le chômeur lié à l'utilisateur connecté
-        # Adaptez 'chomeur' au nom du related_name dans votre modèle
-        chomeur = request.user.chomeur  # ou request.user.profil_chomeur selon votre modèle
+        chomeur = request.user.profil_chomeur
         
         # Récupérer les IDs des compétences déjà liées au chômeur
         competences_liees_ids = chomeur.competences.values_list('id', flat=True)
@@ -229,145 +215,10 @@ def competences_disponibles_pour_chomeur(request):
         return Response({
             'error': f'Erreur lors de la récupération des compétences: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-# core/views.py
-
-class CompetenceListCreateView(generics.ListCreateAPIView):
-    """
-    Liste TOUTES les compétences disponibles dans le système
-=======
-            
-            
 
 
 # ============================================
-# VIEWS EXISTANTES (garder tel quel)
-# ============================================
-
-class HelloView(APIView):
-    def get(self, request):
-        return Response({"message": "Backend Django connecté à React 🚀"})
-
-
-class UtilisateurListView(APIView):
-    def get(self, request):
-        utilisateurs = Utilisateur.objects.all()
-        serializer = UtilisateurSerializer(utilisateurs, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class LoginView(APIView):
-    """
-    Vue pour la connexion utilisateur avec JWT
-    """
-    permission_classes = [AllowAny]
-    serializer_class = LoginSerializer
-
-    def post(self, request):
-        try:
-            serializer = LoginSerializer(data=request.data, context={'request': request})
-            
-            if not serializer.is_valid():
-                return Response({
-                    'errors': serializer.errors
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            user = serializer.validated_data['user']
-
-            # Générer les tokens JWT
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-
-            # Sérialiser les données utilisateur
-            user_data = UtilisateurSerializer(user).data
-
-            return Response({
-                'message': 'Connexion réussie',
-                'access': access_token,
-                'refresh': refresh_token,
-                'user': user_data
-            }, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            return Response({
-                'errors': {'general': str(e)}
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class LogoutView(APIView):
-    """
-    Vue pour la déconnexion (blacklist le refresh token)
-    """
-    def post(self, request):
-        try:
-            refresh_token = request.data.get('refresh')
-            if refresh_token:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
-            return Response({
-                'message': 'Déconnexion réussie'
-            }, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({
-                'errors': {'general': 'Token invalide'}
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-
-class CurrentUserView(APIView):
-    """
-    Récupère les informations de l'utilisateur connecté
-    """
-    def get(self, request):
-        if request.user.is_authenticated:
-            serializer = UtilisateurSerializer(request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response({
-            'errors': {'general': 'Non authentifié'}
-        }, status=status.HTTP_401_UNAUTHORIZED)
-
-
-class CompetenceListCreateView(generics.ListCreateAPIView):
-    """
-    Liste toutes les compétences disponibles ou en crée une nouvelle
->>>>>>> 8ad9ac1453190eadc16f4f645feb97f7200b1a8d
-    GET/POST /core/competences/
-    """
-    queryset = Competence.objects.all().order_by('categorie', 'libelle')
-    serializer_class = CompetenceSerializer
-<<<<<<< HEAD
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['libelle', 'categorie']
-    permission_classes = [AllowAny]  # 🔓 Accessible sans authentification
-=======
->>>>>>> 8ad9ac1453190eadc16f4f645feb97f7200b1a8d
-    
-    def perform_create(self, serializer):
-        if self.request.user.is_authenticated:
-            serializer.save(created_by=self.request.user)
-        else:
-<<<<<<< HEAD
-            serializer.save()
-=======
-            serializer.save()
-
-
-class CompetenceDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Récupère, modifie ou supprime une compétence
-    GET/PUT/DELETE /core/competences/{id}/
-    """
-    queryset = Competence.objects.all()
-    serializer_class = CompetenceSerializer
-    
-    def perform_update(self, serializer):
-        if self.request.user.is_authenticated:
-            serializer.save(modified_by=self.request.user)
-        else:
-            serializer.save()
-
-
-# ============================================
-# 🆕 NOUVELLES VIEWS POUR CANDIDATURES
+# NOUVELLES VIEWS POUR CANDIDATURES
 # ============================================
 
 # ========================================
@@ -560,4 +411,3 @@ class CandidatureStatsView(APIView):
         return Response({
             'error': 'Profil non trouvé'
         }, status=status.HTTP_404_NOT_FOUND)
->>>>>>> 8ad9ac1453190eadc16f4f645feb97f7200b1a8d

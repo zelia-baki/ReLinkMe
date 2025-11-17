@@ -331,3 +331,4 @@ def update_verif_loc(request, id_verif_loc, id_admin_verif):
             "message": str(e),
             "error": e.__class__.__name__
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

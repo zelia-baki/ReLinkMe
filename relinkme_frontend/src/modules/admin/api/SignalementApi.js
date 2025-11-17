@@ -42,3 +42,13 @@ export const  listSignalement = async (statut,payload) => {
     throw error;
   }
 }
+
+export const  getSingleUser = async (idUser) => {
+    try {
+    const { data } = await axios.get(`admin/user/${idUser}`)
+    return data;
+  } catch (error) {
+    console.error("Erreur :", error.response?.data || error.message);
+    throw error;
+  }
+}

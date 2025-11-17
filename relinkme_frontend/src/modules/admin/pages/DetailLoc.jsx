@@ -135,11 +135,6 @@ function DetailLoc() {
                             <td>({Localisation.latitude},{Localisation.longitude})</td>
                         </tr>
                         <tr>
-                            <td className='label'>Lien justificatif</td>
-                            <td>:</td>
-                            <td>{Localisation.justificatif_url}</td>
-                        </tr>
-                        <tr>
                             <td className='label'>Localisation insérée </td>
                             <td>:</td>
                             <td>{(userData.localisation == null) ? "Aucun" : userData.localisation}</td>

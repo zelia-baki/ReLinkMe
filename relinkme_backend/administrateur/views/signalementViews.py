@@ -177,3 +177,30 @@ def traiter_signalement(request,id_signalement,id_admin_responsable):
             "error": e.__class__.__name__
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['POST'])
+def single_loc(request,signalement_id):
+    try:
+        code_admin = request.data.get('code_admin')
+        admin_role = Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
+
+        if admin_role == "admin_validation":
+            return Response({
+                "success": False,
+                "message": "Cet utilisateur n'est pas autorisé à consulter",
+                "data": []
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        list_demande = VerificationLocalisation.objects.get(id=demande_id)
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": VerifLocationSerializer(list_demande).data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

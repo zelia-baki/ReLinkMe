@@ -6,12 +6,10 @@ import axios from "@/services/axiosInstance";
  */
 export const inscriptionRecruteur = async (formData) => {
   try {
-    // Utilise une instance axios sans token pour l'inscription
     const response = await axios.post("/recruteur/inscription/", formData, {
       headers: {
         'Content-Type': 'application/json',
       },
-      // Pas d'autorisation requise pour l'inscription
       transformRequest: [(data, headers) => {
         delete headers.Authorization;
         return JSON.stringify(data);
@@ -25,7 +23,7 @@ export const inscriptionRecruteur = async (formData) => {
 };
 
 /**
- * Récupère le profil du recruteur connecté
+ * 📋 Récupère le profil du recruteur connecté
  */
 export const getRecruteurProfile = async () => {
   try {
@@ -38,27 +36,37 @@ export const getRecruteurProfile = async () => {
 };
 
 /**
- * 🔹 Récupère tous les recruteurs
+ * 📋 Récupère tous les recruteurs
  */
 export const getAllRecruteurs = async () => {
-  const { data } = await axios.get("/recruteur/recruteurs/");
-  return data;
+  try {
+    const response = await axios.get("/recruteur/recruteurs/");
+    return response.data;
+  } catch (error) {
+    console.error("❌ Erreur récupération recruteurs:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 /**
- * 🔹 Récupère un recruteur par ID
+ * 🔍 Récupère un recruteur par ID
  */
 export const getRecruteurById = async (id) => {
-  const { data } = await axios.get(`/recruteur/recruteurs/${id}/`);
-  return data;
+  try {
+    const response = await axios.get(`/recruteur/recruteurs/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Erreur récupération recruteur:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 /**
- * Met à jour le profil du recruteur
+ * ✏️ Met à jour le profil du recruteur
  */
-export const updateRecruteur = async (id, data) => {
+export const updateRecruteur = async (id, updateData) => {
   try {
-    const response = await axios.patch(`/recruteur/recruteurs/${id}/`, data);
+    const response = await axios.patch(`/recruteur/recruteurs/${id}/`, updateData);
     return response.data;
   } catch (error) {
     console.error("❌ Erreur mise à jour recruteur:", error.response?.data || error.message);
@@ -67,18 +75,27 @@ export const updateRecruteur = async (id, data) => {
 };
 
 /**
- * 🔹 Supprime un recruteur
+ * 🗑️ Supprime un recruteur
  */
 export const deleteRecruteur = async (id) => {
-  const { data } = await axios.delete(`/recruteur/recruteurs/${id}/`);
-  return data;
+  try {
+    const response = await axios.delete(`/recruteur/recruteurs/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Erreur suppression recruteur:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
-export default {
-  inscriptionRecruteur,
-  getRecruteurProfile,
-  getAllRecruteurs,
-  getRecruteurById,
-  updateRecruteur,
-  deleteRecruteur,
+/**
+ * 👤 Récupère le profil complet du recruteur connecté
+ */
+export const getMonProfilRecruteur = async () => {
+  try {
+    const response = await axios.get("/recruteur/recruteurs/me/");
+    return response.data;
+  } catch (error) {
+    console.error("❌ Erreur récupération profil recruteur:", error.response?.data || error.message);
+    throw error;
+  }
 };

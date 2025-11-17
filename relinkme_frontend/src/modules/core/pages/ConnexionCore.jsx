@@ -105,7 +105,7 @@ export default function ConnexionPage() {
         if (userRole === 'admin') {
           window.location.href = '/admin/dashboard';
         } else if (userRole === 'recruteur') {
-          window.location.href = '/recruteur/mes-offres';
+          window.location.href = '/recruteur/mesoffres';
         } else if (userRole === 'chomeur') {
           window.location.href = '/chomeur/profil';
         } else {

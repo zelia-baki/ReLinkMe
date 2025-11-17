@@ -9,7 +9,9 @@ import PublierOffre from "./modules/Offres/pages/PublierOffre";
 import MesOffres from "./modules/Offres/pages/MesOffres";
 import ListeOffres from "./modules/Offres/pages/ListeOffres";
 import DetailOffre from "./modules/Offres/pages/DetailOffre";
-import RecruteurRoute from "./components/routes/RecruteurRoute";
+import ListeRecruteurs from "./modules/recruteur/pages/ListeRecruteur";
+import ProfilRecruteur from "./modules/recruteur/pages/ProfilRecruteur";
+
 
 function App() {
   return (
@@ -24,9 +26,12 @@ function App() {
         <Route path="/recruteur/mesoffres" element={<MesOffres />} />  
         <Route path="/offres" element={<ListeOffres />} />
         <Route path="/offres/:id" element={<DetailOffre />} />
-        {/* <Route path="/offres/publier" element={<RecruteurRoute><PublierOffre /></RecruteurRoute>} /> */}
         <Route path="/offres/publier" element={<PublierOffre />} />
-        <Route path="/recruteur/mes-offres" element={<MesOffres />} />
+        <Route path="/recruteur/liste" element={<ListeRecruteurs />} />
+        <Route path="/recruteur/profil" element={<ProfilRecruteur />} />
+
+
+
 
       </Routes>
     </BrowserRouter>

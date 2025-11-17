@@ -13,8 +13,8 @@ from .views import (
 router = DefaultRouter()
 router.register(r'recruteurs', RecruteurViewSet, basename='recruteur')
 router.register(r'offres', OffreViewSet, basename='offre')
-router.register(r'offres-competences', OffreCompetenceViewSet, basename='offre-competence')
-router.register(r'tests-competences', TestCompetenceViewSet, basename='test-competence')
+router.register(r'offres-competences', OffreCompetenceViewSet, basename='offre_competence')
+router.register(r'tests-competences', TestCompetenceViewSet, basename='test_competence')
 
 # URLs personnalisées
 urlpatterns = [

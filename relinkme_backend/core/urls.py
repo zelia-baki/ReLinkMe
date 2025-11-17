@@ -9,8 +9,9 @@ from .views import (
     CurrentUserView,
     CompetenceListCreateView,
     CompetenceDetailView,
+    competences_disponibles_pour_chomeur,
     
-    # 🆕 Nouvelles views pour candidatures
+    # Nouvelles views pour candidatures
     # Chômeur
     MesCandidaturesListView,
     CandidatureCreateView,
@@ -39,9 +40,10 @@ urlpatterns = [
     # Routes pour les compétences globales
     path('competences/', CompetenceListCreateView.as_view(), name='competence-list-create'),
     path('competences/<int:pk>/', CompetenceDetailView.as_view(), name='competence-detail'),
+    path('competences/disponibles/', competences_disponibles_pour_chomeur, name='competences-disponibles'),
     
     # ========================================
-    # 🆕 NOUVELLES ROUTES CANDIDATURES
+    # NOUVELLES ROUTES CANDIDATURES
     # ========================================
     
     # CHÔMEUR - Mes candidatures

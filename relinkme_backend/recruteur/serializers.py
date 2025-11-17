@@ -118,25 +118,16 @@ class RecruteurSerializer(serializers.ModelSerializer):
 
 
 class OffreSerializer(serializers.ModelSerializer):
-    """
-    Serializer pour les offres d'emploi.
-    Le champ 'recruteur' est géré automatiquement par perform_create() dans la vue.
-    """
-    # Champs en lecture seule pour affichage
     recruteur_nom = serializers.CharField(source='recruteur.nom_entreprise', read_only=True)
-    recruteur_id = serializers.IntegerField(source='recruteur.id', read_only=True)
 
     class Meta:
         model = Offre
         fields = [
-            'id', 'code_offre', 'recruteur_id', 'recruteur_nom',
+            'id', 'code_offre', 'recruteur', 'recruteur_nom',
             'titre', 'description', 'type_contrat', 'salaire',
             'date_limite', 'statut', 'date_creation'
         ]
-        read_only_fields = (
-            'id', 'code_offre', 'date_creation', 
-            'recruteur_id', 'recruteur_nom'
-        )
+        read_only_fields = ('id', 'code_offre', 'date_creation', 'recruteur_nom')
 
 
 class OffreCompetenceSerializer(serializers.ModelSerializer):

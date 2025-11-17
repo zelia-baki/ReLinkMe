@@ -2,11 +2,11 @@
 import axios from "@/services/axiosInstance";
 
 /**
- * 📋 Récupère toutes les compétences disponibles
+ * 📋 Récupère TOUTES les compétences disponibles
  */
 export const getAllCompetences = async () => {
   try {
-    const response = await axios.get("/api/chomeur/competences/");
+    const response = await axios.get("/core/competences/");
     return response.data;
   } catch (error) {
     console.error("❌ Erreur récupération compétences:", error.response?.data || error.message);
@@ -19,7 +19,7 @@ export const getAllCompetences = async () => {
  */
 export const getCompetenceById = async (id) => {
   try {
-    const response = await axios.get(`/api/chomeur/competences/${id}/`);
+    const response = await axios.get(`/core/competences/${id}/`);
     return response.data;
   } catch (error) {
     console.error("❌ Erreur récupération compétence:", error.response?.data || error.message);

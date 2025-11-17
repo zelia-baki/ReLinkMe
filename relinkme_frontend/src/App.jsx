@@ -16,6 +16,7 @@ import PostulerOffre from '@/modules/candidatures/pages/PostulerOffre';
 import MesCandidatures from '@/modules/candidatures/pages/MesCandidatures';
 import CandidaturesRecues from '@/modules/candidatures/pages/CandidaturesRecues';
 import DetailCandidature from '@/modules/candidatures/pages/DetailCandidature';
+import DemandeConsulter from "./modules/admin/pages/DemandeConsulter";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/connexion" element={<ConnexionPage />} />
         <Route path="/admin" element={<Admin/>}/>
         <Route path="admin/demande" element={<Demande/>}/>
+        <Route path="admin/demande/:id" element={<DemandeConsulter/>}/>
         <Route path="/recruteur/inscription" element={<InscriptionRecruteur />} />
         <Route path="/recruteur/mesoffres" element={<MesOffres />} />
         <Route path="/offres" element={<ListeOffres />} />

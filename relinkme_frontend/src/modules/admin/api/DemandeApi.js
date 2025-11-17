@@ -13,9 +13,19 @@ export const creation_demande = async (id_utilisateur, payload) => {
   }
 };
 
-export const  getAllDemande = async (filters) => {
+export const  getAllDemande = async (filter,payload) => {
     try {
-    const { data } = await axios.get(`demande/liste?statut=${filters["statut"]}`)
+    const { data } = await axios.post(`demande/liste?statut=${filter}`,payload)
+    return data;
+  } catch (error) {
+    console.error("Erreur :", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+export const  getSingleDemande = async (idDmd,payload) => {
+    try {
+    const { data } = await axios.post(`demande/${idDmd}`,payload)
     return data;
   } catch (error) {
     console.error("Erreur :", error.response?.data || error.message);

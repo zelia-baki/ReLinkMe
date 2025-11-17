@@ -100,7 +100,7 @@ const resetValues = () => {
                 <Plus /> Ajouter un administrateur
             </button>
         </div>
-        <div className="table-section">
+        <div className="bottom-table-section">
             <table className='w-full border-collapse'>
                 <thead>
                     <tr>

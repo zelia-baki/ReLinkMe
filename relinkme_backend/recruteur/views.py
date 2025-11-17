@@ -59,6 +59,8 @@ class InscriptionRecruteurView(generics.CreateAPIView):
 # ============================================================
 # 🏢 RECRUTEUR - VIEWSET
 # ============================================================
+# recruteur/views.py
+
 class RecruteurViewSet(viewsets.ModelViewSet):
     queryset = Recruteur.objects.select_related('utilisateur').all()
     serializer_class = RecruteurSerializer
@@ -66,15 +68,51 @@ class RecruteurViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['nom_entreprise', 'secteur_activite', 'code_recruteur']
 
-    @transaction.atomic
-    def perform_create(self, serializer):
-        creator = get_authenticated_user(self.request)
-        serializer.save(created_by=creator)
+    # ... (tes autres méthodes perform_create, perform_update)
 
-    @transaction.atomic
-    def perform_update(self, serializer):
-        modifier = get_authenticated_user(self.request)
-        serializer.save(modified_by=modifier)
+    # 👇 AJOUTE CETTE MÉTHODE ICI
+    @action(detail=False, methods=['get'], url_path='me')
+    def mon_profil(self, request):
+        """
+        Retourne le profil complet du recruteur connecté avec statistiques.
+        Accessible à : /api/recruteur/recruteurs/me/
+        """
+        user = request.user
+        
+        # Vérifier que l'utilisateur a un profil recruteur
+        if not hasattr(user, 'profil_recruteur'):
+            return Response(
+                {'error': 'Aucun profil recruteur associé à cet utilisateur'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        recruteur = user.profil_recruteur
+        
+        # Récupérer les offres du recruteur
+        offres = Offre.objects.filter(recruteur=recruteur)
+        
+        # Calculer les statistiques
+        stats = {
+            'offres_total': offres.count(),
+            'offres_actives': offres.filter(statut='active').count(),
+            'offres_inactives': offres.filter(statut='inactive').count(),
+            'offres_fermees': offres.filter(statut='closed').count(),
+        }
+        
+        # Sérialiser le profil
+        serializer = self.get_serializer(recruteur)
+        
+        # Récupérer les dernières offres
+        dernieres_offres = OffreSerializer(
+            offres.order_by('-date_creation')[:5], 
+            many=True
+        ).data
+        
+        return Response({
+            'profil': serializer.data,
+            'statistiques': stats,
+            'offres': dernieres_offres
+        })
 
 
 # ============================================================
@@ -194,7 +232,48 @@ class OffreViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(offres, many=True)
         return Response(serializer.data)
 
-
+@action(detail=False, methods=['get'], url_path='me')
+def mon_profil(self, request):
+    """
+    Retourne le profil complet du recruteur connecté avec statistiques.
+    Accessible à : /api/recruteur/recruteurs/me/
+    """
+    user = request.user
+    
+    # Vérifier que l'utilisateur a un profil recruteur
+    if not hasattr(user, 'profil_recruteur'):
+        return Response(
+            {'error': 'Aucun profil recruteur associé à cet utilisateur'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    recruteur = user.profil_recruteur
+    
+    # Récupérer les offres du recruteur
+    offres = Offre.objects.filter(recruteur=recruteur)
+    
+    # Calculer les statistiques
+    stats = {
+        'offres_total': offres.count(),
+        'offres_actives': offres.filter(statut='active').count(),
+        'offres_inactives': offres.filter(statut='inactive').count(),
+        'offres_fermees': offres.filter(statut='closed').count(),
+    }
+    
+    # Sérialiser le profil
+    serializer = self.get_serializer(recruteur)
+    
+    # Récupérer les dernières offres
+    dernieres_offres = OffreSerializer(
+        offres.order_by('-date_creation')[:5], 
+        many=True
+    ).data
+    
+    return Response({
+        'profil': serializer.data,
+        'statistiques': stats,
+        'offres': dernieres_offres
+    })
 # ============================================================
 # 🧠 OFFRE COMPETENCE - VIEWSET
 # ============================================================

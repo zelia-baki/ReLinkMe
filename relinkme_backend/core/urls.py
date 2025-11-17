@@ -9,6 +9,7 @@ from .views import (
       # 🆕 Ajoutez ces imports
     CompetenceListCreateView,
     CompetenceDetailView,
+    competences_disponibles_pour_chomeur,
 )
 
 urlpatterns = [
@@ -22,4 +23,6 @@ urlpatterns = [
      # 🆕 Routes pour les compétences globales
     path('competences/', CompetenceListCreateView.as_view(), name='competence-list-create'),
     path('competences/<int:pk>/', CompetenceDetailView.as_view(), name='competence-detail'),
+    path('competences/disponibles/', competences_disponibles_pour_chomeur, name='competences-disponibles'),  # 🆕 Nouvelle route
+
 ]

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { getSingleDemande, getSingleUser, traiterDemande } from '../api/DemandeApi'
 import { useParams } from 'react-router-dom';
-import {SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
+import {FileText,SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
+import {europeanDate} from '../utilities';
+import Menu from '../components/Menu';
+import './Detail.css'
 
 const INITIAL_FORM_STATE = {
     statut: '',
@@ -14,6 +17,7 @@ function DemandeConsulter() {
     const [userData,setUserData] = useState([]);
     const [writeMotif,setWriteMotif] = useState(false);
     const [modifiedBy,setModifiedBy] = useState(0);
+    const [loading, setLoading] = useState(true);
     
     const adminData = {
         codeAdmin: "ADM00015",
@@ -34,9 +38,16 @@ function DemandeConsulter() {
         setFormData(INITIAL_FORM_STATE)
     }
     const fetchDemande = async (idDmd,body) => {
+        setLoading(true);
+        try{
              const data = await getSingleDemande(idDmd,body);
             setDemande(data.list);
                     console.log(data.list);
+        } catch(error) {
+            console.error("Error fetching demande:", error);
+        } finally {
+            setLoading(false);
+        }
     };
     const fetchUser = async (id) => {
         const data = await getSingleUser(id)
@@ -88,64 +99,93 @@ function DemandeConsulter() {
         setWriteMotif(!writeMotif);
         resetDemande();
     }
+    const getStatusBadge = (status) => {
+        let text = 'Inconnu';
+        let colorClass = 'bg-gray-500';
+
+        switch (status) {
+            case 'approuvee':
+                text = 'Approuvée';
+                colorClass = 'bg-green-500';
+                break;
+            case 'refusee':
+                text = 'Refusé';
+                colorClass = 'bg-red-500';
+                break;
+            case 'en_attente':
+                text = 'En attente';
+                colorClass = 'bg-blue-500';
+                break;
+            default:
+                text = status || 'Inconnu';
+                colorClass = 'bg-gray-500';
+                break;
+        }
+        return <span className={`action-status-badge  ${colorClass}`}>{text}</span>;
+    };
+    if (loading && Object.keys(demande).length === 0) {
+        return (
+            <>
+                <Menu/>
+                <div className='right-pane p-8 flex items-center justify-center h-screen'>
+                    <div className="text-xl font-medium text-gray-500">Chargement des détails de la demande...</div>
+                </div>
+            </>
+        )
+    }
 
   return (
-    <div className='right-pane'>
-        <h2>Demande de vérification</h2>
+     <div className="flex h-screen bg-gray-50">
+    <Menu/>
+    <div className='right-pane p-8 overflow-y-auto'>
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">Demande de vérification</h2>
         <div className='navigation-part'>
             <div className='previous'>
-                <button>
+                <button className='nav-arrow-button'>
                     <SquareChevronLeft size={30} strokeWidth={0.75} />
                 </button>
             </div>
-            <div className='identite'>
-                <div>
-                    <div>{userData.nom_complet}</div>
+            <div className='user-identity-card'>
+                
+                <div className='user-identity-name'>{userData.nom_complet}</div>
 
+                <div className='space-y-1'>
+                    <div className='user-identity-detail'>Code utilisateur: {userData.code_utilisateur}</div>
+                    <div className='user-identity-detail'>Email: {userData.email}</div>
                 </div>
-                <div>Code utilisateur: {userData.code_utilisateur}</div>
-                <div>Email: {userData.email}</div>
             </div>
             <div className='next'>
-                <button>
+                <button className='nav-arrow-button'>
                     <SquareChevronRight size={30} strokeWidth={0.75} />
                 </button>
             </div>
         </div>
         
-        <hr></hr>
-        <div className='action'>
+        <div className='action-section'>
+            {getStatusBadge(demande.statut)}
             {
-                (demande.statut == 'approuvee') ? 
-                <div>Approuvée</div>
-                : 
-                <>
-                <div>
-                    {demande.statut}
-                </div>
-                <div style={{ visibility: !writeMotif ? "visible" : "hidden" }}>
-                    <button onClick={approve}>
+                (demande.statut != 'approuvee') && 
+                
+                <div className='action-button-group' style={{ visibility: !writeMotif ? "visible" : "hidden" }}>
+                    <button onClick={approve}  className='approve-button'>
                         <Check size={18} strokeWidth={1.25} /> Approuver
                     </button>
-                    <button onClick={reject}>
+                    <button onClick={reject}  className='reject-button'>
                         <X size={18} strokeWidth={1.25} /> Refuser
                     </button>
                 </div>
-                </>
+                
                 
             }
         </div>
-        <div className='info-part'>
-            <div className='identity-part'>
-                <div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                            </tr>
-                        </thead>
+        <div className='info-part grid lg:grid-cols-2 gap-8'>
+            <div className='detail-table-container'>
+                <h3 className="text-lg font-semibold flex items-center text-gray-800 mb-4 border-b pb-2">
+                    
+                    <FileText size={20} color="#1e2939" strokeWidth={1.75} />
+                    Informations de demande </h3>
+                <div className='table-container'>
+                     <table className='detail-table w-full'>
                         <tbody>
                         <tr>
                             <td className='label'>Code demande </td>
@@ -162,31 +202,31 @@ function DemandeConsulter() {
                             <td>:</td>
                             {
                                 writeMotif ? 
-                                <td>
+                                <td className='py-1'>
                                     <input type="text" name="motif_refus" value={formData.motif_refus} onChange={handleChange}/>
-                                    <div>
-                                        <button onClick={cancel}>
+                                    <div className='flex items-end justify-end my-1.5'>
+                                        <button onClick={cancel} className='cancel-button'>
                                             Annuler
                                         </button>
-                                        <button onClick={confirm}>
+                                        <button onClick={confirm} className='add-button'>
                                             Confirmer
                                         </button>
                                     </div>
                                 </td>
                                 :
-                                <td>{(demande.motif_refus == "") ? "Aucun" : demande.motif_refus}</td>
+                                <td>{demande.motif_refus ||'-'}</td>
                             }
                             
                         </tr>
                         <tr>
                             <td className='label'>Date de soumission </td>
                             <td>:</td>
-                            <td>{demande.date_soumission}</td>
+                            <td>{europeanDate(demande.date_soumission)}</td>
                         </tr>
                         <tr>
                             <td className='label'>Date de traitement </td>
                             <td>:</td>
-                            <td>{demande.date_traitement}</td>
+                            <td>{europeanDate(demande.date_traitement)}</td>
                         </tr>
                         <tr>
                             <td className='label'>Créé par </td>
@@ -196,27 +236,30 @@ function DemandeConsulter() {
                         <tr>
                             <td className='label'>Créé le </td>
                             <td>:</td>
-                            <td>{demande.created_at}</td>
+                            <td>{europeanDate(demande.created_at)}</td>
                         </tr>
                         <tr>
                             <td className='label'>Modifié par </td>
                             <td>:</td>
-                            <td>{demande.modified_by}</td>
+                            <td>{demande.modified_by || '-'}</td>
                         </tr>
                         <tr>
                             <td className='label'>Modifié le </td>
                             <td>:</td>
-                            <td>{demande.updated_at}</td>
+                            <td>{europeanDate(demande.updated_at)}</td>
                         </tr>
                     </tbody>
                     </table>
                 </div>
             </div>
-            <div className='pece-justificative'>
+            <div className='left-pane'>
+                 <h3 className="text-lg font-semibold text-gray-800 p-4 ">Pièce justificative</h3>
+                
 
             </div>
         </div>
 
+    </div>
     </div>
   )
 }

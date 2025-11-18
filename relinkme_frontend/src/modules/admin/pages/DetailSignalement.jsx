@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { getSingleUser,getSingleSignalement,traiterSignalement } from '../api/SignalementApi'
 import { useParams } from 'react-router-dom';
 import {SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
+import {europeanDate} from '../utilities';
+import Menu from '../components/Menu';
 
 const INITIAL_FORM_STATE = {
     statut: '',
@@ -100,6 +102,9 @@ function DetailSignal() {
     }
     
   return (
+
+    <>
+    <Menu/>
     <div className='right-pane'>
         <h2>Signalement de contenu</h2>
         <div className='navigation-part'>
@@ -200,12 +205,12 @@ function DetailSignal() {
                         <tr>
                             <td className='label'>Date signalement </td>
                             <td>:</td>
-                            <td>{Signal.date_signalement}</td>
+                            <td>{europeanDate(Signal.date_signalement)}</td>
                         </tr>
                         <tr>
                             <td className='label'>Date traitement  </td>
                             <td>:</td>
-                            <td>{Signal.date_traitement}</td>
+                            <td>{europeanDate(Signal.date_traitement)}</td>
                         </tr>
                         <tr>
                             <td className='label'>Offre </td>
@@ -230,7 +235,7 @@ function DetailSignal() {
                         <tr>
                             <td className='label'>Créé le </td>
                             <td>:</td>
-                            <td>{Signal.created_at}</td>
+                            <td>{europeanDate(Signal.created_at)}</td>
                         </tr>
                         <tr>
                             <td className='label'>Modifié par </td>
@@ -240,7 +245,7 @@ function DetailSignal() {
                         <tr>
                             <td className='label'>Modifié le </td>
                             <td>:</td>
-                            <td>{Signal.updated_at}</td>
+                            <td>{europeanDate(Signal.updated_at)}</td>
                         </tr>
                     </tbody>
                     </table>
@@ -257,6 +262,7 @@ function DetailSignal() {
         </div>
 
     </div>
+    </>
   )
 }
 

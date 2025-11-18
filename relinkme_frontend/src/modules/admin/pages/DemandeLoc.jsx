@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { getAllLocListe } from '../api/DemandeApi'
 import  {SlidersHorizontal,Plus,Eye} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import {europeanDate} from '../utilities';
+import Menu from '../components/Menu';
 
 const filterChoices = {
     all : "Tout",
@@ -35,6 +37,8 @@ function DemandeLocalisation() {
         navigate(`/admin/localisation/${idDemande}/${idUtilisateur}`);
     }
   return (
+    <>
+    <Menu/>
     <div className='right-pane'>
         <h2 className='title'>Vérification de localisation</h2>
         <div className='top-table-section'>
@@ -81,7 +85,7 @@ function DemandeLocalisation() {
                                 <td>{demande.statut}</td>
                                 <td>{demande.id_admin_verificateur}</td>
                                 <td>{demande.created_by}</td>
-                                <td>{demande.created_at}</td>
+                                <td>{europeanDate(demande.created_at)}</td>
                                 <td>
                                     <button onClick={()=>VoirPlus(demande.id,demande.id_utilisateur)}>
                                        <Eye size={20} strokeWidth={1.25} /> Voir plus
@@ -95,6 +99,7 @@ function DemandeLocalisation() {
         </div>
 
     </div>
+    </>
   )
 }
 

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import {creation_admin, getAllAdmin, getAdminById, deleteAdmin, updateAdmin} from '@/modules/admin/api/AdminApi.js'
-import  {SlidersHorizontal,Plus,Trash, SquarePen} from 'lucide-react'
+import  {SlidersHorizontal,Plus,Trash, SquarePen,X} from 'lucide-react'
 import { getAllUsers } from '../api/AdminApi';
+import {europeanDate} from '../utilities';
+import Menu from '../components/Menu';
+import './Style.css'
 
  const autorisations = {
         super_admin : 'Superadmin',
@@ -13,6 +16,7 @@ const INITIAL_FORM_STATE = {
     niveau_autorisation: '',
     departement: ''
 };
+
 function Admin() {
     const [formData,setFormData] = useState({
         utilisateur:'',
@@ -23,6 +27,8 @@ function Admin() {
     const [listAdmin,setListAdmin] = useState([]);
     const [listUser, setListUser]  = useState([]);
     const [codeAdmin,setCodeAdmin] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false); 
+    const [isEditing, setIsEditing] = useState(false);
     const [idUtilisateur, setIdUtilisateur] = useState(null);
 
     useEffect(()=>{
@@ -51,6 +57,8 @@ function Admin() {
             departement:rowdata.departement
         })
         setCodeAdmin(rowdata.code_admin);
+        setIsEditing(true);
+        setIsModalOpen(true);
         
     }
     const modifyAdmin = async (adminCode,codeManipulateur,form) => {
@@ -78,6 +86,7 @@ const onSubmit = (e) => {
     const response = createAdmin(1,formData);
     console.log(response);
     resetValues();
+    fetchListAdmin();
 }
 const onEdit = (e) => {
     e.preventDefault();
@@ -88,20 +97,30 @@ const onEdit = (e) => {
 const resetValues = () => {
     setFormData(INITIAL_FORM_STATE);
     setCodeAdmin("");
+    setIsEditing(false);
+    setIsModalOpen(false);
 }
+const handleOpenModal = () => {
+        resetValues();
+        setIsModalOpen(true);
+        setIsEditing(false);
+}
+
   return (
-    <div className="right-pane">
-        <h2 className="title">Liste des administrateurs</h2>
+     <div className="flex h-screen bg-gray-50">
+    <Menu/>
+    <div className="right-pane flex-1 p-8 overflow-y-auto">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">Liste des administrateurs</h2>
         <div className="top-table-section">
-            <button>
-                <SlidersHorizontal /> Filtres
-            </button>
-            <button>
-                <Plus /> Ajouter un administrateur
+
+            <button  
+                onClick={handleOpenModal}
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-150">
+                <Plus /> <span>Ajouter un administrateur</span>
             </button>
         </div>
-        <div className="bottom-table-section">
-            <table className='w-full border-collapse'>
+        <div className="bottom-table-section bg-white rounded-xl shadow-lg overflow-hidden mt-6">
+            <table className="info-table w-full border-collapse">
                 <thead>
                     <tr>
                         
@@ -126,19 +145,19 @@ const resetValues = () => {
                             <td>{adminIndex+1}</td>
                             <td>{admin.code_admin}</td>
                             <td>{admin.utilisateur}</td>
-                            <td>{admin.niveau_autorisation}</td>
+                            <td>{autorisations[admin.niveau_autorisation]}</td>
                             <td>{admin.departement}</td>
                             <td>{admin.created_by}</td>
-                            <td>{admin.created_at}</td>
+                            <td><span style={{ whiteSpace: "pre-line" }}>{europeanDate(admin.created_at)}</span></td>
                             <td>{admin.modified_by}</td>
-                            <td>{admin.modified_at}</td>
+                            <td><span style={{ whiteSpace: "pre-line" }}>{europeanDate(admin.modified_at)}</span></td>
                             <td>
-                                <button onClick={()=>fetchToModify(admin)}>
+                                <button onClick={()=>fetchToModify(admin)} className='edit-button'>
                                     <SquarePen size={18} strokeWidth={1.25} />
                                 </button>
                             </td>
                             <td>
-                                <button onClick={() => removeAdmin(admin.code_admin)}>
+                                <button onClick={() => removeAdmin(admin.code_admin)} className='delete-button'>
                                     <Trash size={18} strokeWidth={1.25} />
                                 </button>
                             </td>
@@ -148,44 +167,105 @@ const resetValues = () => {
                 }
                 </tbody>
             </table>
+            {listAdmin.length === 0 && (
+                        <p className="text-center text-gray-500 py-6">Aucun administrateur trouvé.</p>
+                    )}
         </div>
-        <div className='form-modal'>
-            <div>Ajout/Modification d'un administrateur</div>
-            <form method='POST'>
-                <label>Code administrateur</label>
-                <input type="text" value={codeAdmin} readOnly={true}/>
-                <label>Utilisateur associé</label>
-                <select name="utilisateur" onChange={handleChange} value={formData.utilisateur}>
-                    <option value="">--Sélectionner--</option>
-                    {
-                        listUser.map((user,userIndex)=>(
-                            <option value={user.id} key={userIndex}>
-                               
-                                    {user.photo_profil}
-                                    {user.nom_complet}
+         {isModalOpen && (
+                    <div className='form-modal'>
+                        <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg transform transition-all">
+                            
+                            {/* Modal Header */}
+                            <div className="flex justify-between items-center mb-6 border-b pb-3">
+                                <h3 className="text-xl font-semibold text-gray-800">
+                                    {isEditing ? "Modification" : "Ajout"} d'un administrateur
+                                </h3>
+                                <button onClick={resetValues} className="text-gray-400 hover:text-gray-600">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Modal Form */}
+                            <form method='POST' className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Code administrateur</label>
+                                    <input 
+                                        type="text" 
+                                        value={codeAdmin} 
+                                        readOnly={true} 
+                                        className="w-full select bg-gray-100 cursor-not-allowed" 
+                                    />
+                                </div>
                                 
-                            </option>
-                        ))
-                    }
-                    
-                </select>
-                <label>Niveau d'autorisation</label>
-                <select name="niveau_autorisation" onChange={handleChange} value={formData.niveau_autorisation}>
-                    <option value="">--Sélectionner--</option>
-                    {Object.entries(autorisations).map(([key, label]) => (
-                        <option key={key} value={key} >
-                            {label}
-                        </option>
-                    ))}
-                </select>
-                <label>Département</label>
-                <input type="text" name="departement" value={formData.departement} onChange={handleChange}/>
-                <input type="submit" value="Créer l'administrateur" onClick={onSubmit}/>
-                <input type="submit" value="Modifier l'administrateur" onClick={onEdit}/>
-            </form>
-        </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Utilisateur associé</label>
+                                    <select key={`user-select-${formData.utilisateur}`} name="utilisateur" onChange={handleChange} value={formData.utilisateur} className="w-full select">
+                                        <option value="">--Sélectionner--</option>
+                                        {listUser.map((user) => (
+                                            <option value={user.id} key={user.id}>
+                                                {user.nom_complet}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Niveau d'autorisation</label>
+                                    <select name="niveau_autorisation" onChange={handleChange} value={formData.niveau_autorisation} className="w-full select">
+                                        <option value="">--Sélectionner--</option>
+                                        {Object.entries(autorisations).map(([key, label]) => (
+                                            <option key={key} value={key} >
+                                                {label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Département</label>
+                                    <input 
+                                        type="text" 
+                                        name="departement" 
+                                        value={formData.departement} 
+                                        onChange={handleChange} 
+                                        className="w-full select" 
+                                        placeholder="Ex: RH, Commercial"
+                                    />
+                                </div>
+
+                                {/* Form Action Buttons */}
+                                <div className="pt-4 flex justify-end space-x-3">
+                                    <button 
+                                        type="button" 
+                                        onClick={resetValues} 
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                                    >
+                                        Annuler
+                                    </button>
+                                    {isEditing ? (
+                                        <button 
+                                            type="submit" 
+                                            onClick={onEdit} 
+                                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                        >
+                                            Modifier l'administrateur
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            type="submit" 
+                                            onClick={onSubmit} 
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                        >
+                                            Créer l'administrateur
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
     </div>
-        
+    </div> 
     
   )
 }

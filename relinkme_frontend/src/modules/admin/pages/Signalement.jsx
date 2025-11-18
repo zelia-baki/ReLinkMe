@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import  {SlidersHorizontal,Plus,Eye} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { listSignalement } from '../api/SignalementApi'
+import {europeanDate} from '../utilities';
+import Menu from '../components/Menu';
 
 const filterChoices = {
     all : "Tout",
@@ -46,6 +48,8 @@ function Signalement() {
         navigate(`/admin/signalement/${idSignal}/${idUtilisateur}`);
     }
   return (
+    <>
+    <Menu/>
     <div className='right-pane'>
         <h2 className='title'>Liste des signalements</h2>
         <div className='top-table-section'>
@@ -104,7 +108,7 @@ function Signalement() {
                                 <td>{signal.date_signalement}</td>
                                 <td>{signal.id_admin_responsable}</td>
                                 <td>{signal.created_by}</td>
-                                <td>{signal.created_at}</td>
+                                <td>{europeanDate(signal.created_at)}</td>
                                 <td>
                                     <button onClick={()=>VoirPlus(signal.id,signal.id_utilisateur_signale)}>
                                        <Eye size={20} strokeWidth={1.25} /> Voir plus
@@ -118,6 +122,7 @@ function Signalement() {
         </div>
 
     </div>
+    </>
   )
 }
 

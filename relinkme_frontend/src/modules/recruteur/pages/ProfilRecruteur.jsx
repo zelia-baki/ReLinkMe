@@ -7,6 +7,8 @@ import {
   CheckCircle, XCircle, Calendar, Eye,
   Users, TrendingUp, Clock
 } from 'lucide-react';
+import RecruteurLayout from '@/modules/recruteur/layouts/RecruteurLayout';
+import StatCard, { StatsGrid, StatCardSkeleton } from '../components/StatCard';
 import { getMonProfilRecruteur } from '../api/recruteur.api';
 import { 
   getInitials, 
@@ -17,8 +19,8 @@ import {
   formatSiteWeb,
   getAvatarColor,
   truncateText
-} from '@/modules/recruteur/utils/helpers';
-import StatCard from '../components/StatCard';
+} from '../utils/helpers';
+import { STATUT_OFFRE_CONFIG } from '../utils/constants';
 
 export default function ProfilRecruteur() {
   const navigate = useNavigate();
@@ -57,24 +59,71 @@ export default function ProfilRecruteur() {
     { id: 'infos', label: 'Informations', icon: FileText }
   ];
 
+  // Configuration des stats pour StatsGrid
+  const statsConfig = [
+    {
+      icon: Briefcase,
+      label: 'Total offres',
+      value: stats?.offres_total || 0,
+      color: 'blue',
+      onClick: () => setActiveTab('offres'),
+      description: 'Toutes les offres publiées'
+    },
+    {
+      icon: CheckCircle,
+      label: 'Offres actives',
+      value: stats?.offres_actives || 0,
+      color: 'green',
+      description: 'Actuellement visibles'
+    },
+    {
+      icon: Clock,
+      label: 'Offres inactives',
+      value: stats?.offres_inactives || 0,
+      color: 'yellow',
+      description: 'Temporairement suspendues'
+    },
+    {
+      icon: XCircle,
+      label: 'Offres fermées',
+      value: stats?.offres_fermees || 0,
+      color: 'red',
+      description: 'Terminées ou expirées'
+    }
+  ];
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement du profil...</p>
+      <RecruteurLayout>
+        <div className="max-w-7xl mx-auto p-6">
+          {/* Header Skeleton */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex gap-6">
+              <div className="w-32 h-32 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="flex-1 space-y-3">
+                <div className="h-8 w-64 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-5 w-48 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Stats Skeleton */}
+          <StatsGrid stats={[]} loading={true} columns={4} />
         </div>
-      </div>
+      </RecruteurLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
-          {error}
+      <RecruteurLayout>
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
+            {error}
+          </div>
         </div>
-      </div>
+      </RecruteurLayout>
     );
   }
 
@@ -82,8 +131,8 @@ export default function ProfilRecruteur() {
   const tailleBadge = getTailleEntrepriseBadge(profil?.nombre_employes);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <RecruteurLayout>
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header Profile */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-6">
@@ -190,34 +239,8 @@ export default function ProfilRecruteur() {
           {/* APERÇU */}
           {activeTab === 'apercu' && (
             <>
-              {/* Statistiques */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard 
-                  icon={Briefcase} 
-                  label="Total offres" 
-                  value={stats?.offres_total || 0} 
-                  color="blue" 
-                  onClick={() => setActiveTab('offres')}
-                />
-                <StatCard 
-                  icon={CheckCircle} 
-                  label="Offres actives" 
-                  value={stats?.offres_actives || 0} 
-                  color="green" 
-                />
-                <StatCard 
-                  icon={Clock} 
-                  label="Offres inactives" 
-                  value={stats?.offres_inactives || 0} 
-                  color="yellow" 
-                />
-                <StatCard 
-                  icon={XCircle} 
-                  label="Offres fermées" 
-                  value={stats?.offres_fermees || 0} 
-                  color="red" 
-                />
-              </div>
+              {/* Statistiques avec StatsGrid */}
+              <StatsGrid stats={statsConfig} columns={4} />
 
               {/* Actions rapides */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -283,7 +306,7 @@ export default function ProfilRecruteur() {
                       <p>Aucune offre publiée</p>
                     </div>
                   ) : (
-                    offres.map(offre => {
+                    offres.slice(0, 3).map(offre => {
                       const statutInfo = getStatutOffreInfo(offre.statut);
                       return (
                         <div key={offre.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
@@ -475,6 +498,6 @@ export default function ProfilRecruteur() {
           )}
         </div>
       </div>
-    </div>
+    </RecruteurLayout>
   );
 }

@@ -1,9 +1,14 @@
 // modules/offres/pages/MesOffres.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getMesOffres, deleteOffre } from '../api/offres.api';
-import { Briefcase, Plus, Eye, Edit, Trash2, Calendar, DollarSign, MapPin } from 'lucide-react';
+import { Briefcase, Plus, Eye, Edit, Trash2, Calendar, DollarSign, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import RecruteurLayout from '@/modules/recruteur/layouts/RecruteurLayout';
+import { STATUT_OFFRE_CONFIG } from '@/modules/recruteur/utils/constants';
+import { formatDate } from '@/modules/recruteur/utils/helpers';
 
 export default function MesOffres() {
+  const navigate = useNavigate();
   const [offres, setOffres] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,36 +45,15 @@ export default function MesOffres() {
     }
   };
 
-  // 🎨 Badge de statut
+  // 🎨 Badge de statut avec configuration centralisée
   const StatutBadge = ({ statut }) => {
-    const styles = {
-      active: 'bg-green-100 text-green-800',
-      inactive: 'bg-gray-100 text-gray-800',
-      closed: 'bg-red-100 text-red-800'
-    };
-
-    const labels = {
-      active: 'Active',
-      inactive: 'Inactive',
-      closed: 'Fermée'
-    };
-
+    const config = STATUT_OFFRE_CONFIG[statut] || STATUT_OFFRE_CONFIG.active;
+    
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[statut] || styles.active}`}>
-        {labels[statut] || statut}
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${config.color}`}>
+        {config.icon} {config.label}
       </span>
     );
-  };
-
-  // 📅 Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Non définie';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
-      day: '2-digit', 
-      month: 'long', 
-      year: 'numeric' 
-    });
   };
 
   // 💰 Format salaire
@@ -85,43 +69,45 @@ export default function MesOffres() {
   // ⏳ État de chargement
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement de vos offres...</p>
+      <RecruteurLayout>
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto mb-4" />
+              <p className="text-gray-600">Chargement de vos offres...</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </RecruteurLayout>
     );
   }
 
   // ❌ État d'erreur
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+      <RecruteurLayout>
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Erreur</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={fetchOffres}
+              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+            >
+              Réessayer
+            </button>
           </div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Erreur</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={fetchOffres}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Réessayer
-          </button>
         </div>
-      </div>
+      </RecruteurLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 py-8">
-      <div className="max-w-7xl mx-auto">
+    <RecruteurLayout>
+      <div className="max-w-7xl mx-auto p-6">
         {/* En-tête */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">Mes offres d'emploi</h1>
@@ -130,8 +116,8 @@ export default function MesOffres() {
               </p>
             </div>
             <button
-              onClick={() => window.location.href = '/offres/publier'}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+              onClick={() => navigate('/recruteur/offres/nouvelle')}
+              className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm hover:shadow-md"
             >
               <Plus className="w-5 h-5" />
               Nouvelle offre
@@ -141,15 +127,15 @@ export default function MesOffres() {
 
         {/* Liste des offres */}
         {offres.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Briefcase className="w-10 h-10 text-gray-400" />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Briefcase className="w-10 h-10 text-purple-600" />
             </div>
             <h2 className="text-xl font-semibold text-gray-800 mb-2">Aucune offre publiée</h2>
             <p className="text-gray-600 mb-6">Commencez par créer votre première offre d'emploi</p>
             <button
-              onClick={() => window.location.href = '/offres/publier'}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+              onClick={() => navigate('/recruteur/offres/nouvelle')}
+              className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
             >
               Publier une offre
             </button>
@@ -157,7 +143,7 @@ export default function MesOffres() {
         ) : (
           <div className="grid gap-6">
             {offres.map(offre => (
-              <div key={offre.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+              <div key={offre.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                 <div className="p-6">
                   {/* Ligne 1: Titre et statut */}
                   <div className="flex items-start justify-between mb-4">
@@ -196,16 +182,16 @@ export default function MesOffres() {
                   </p>
 
                   {/* Ligne 4: Actions */}
-                  <div className="flex gap-2 pt-4 border-t">
+                  <div className="flex gap-2 pt-4 border-t border-gray-100">
                     <button
-                      onClick={() => window.location.href = `/offres/${offre.id}`}
+                      onClick={() => navigate(`/recruteur/offres/${offre.id}`)}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                       Voir détails
                     </button>
                     <button
-                      onClick={() => window.location.href = `/offres/${offre.id}/modifier`}
+                      onClick={() => navigate(`/recruteur/offres/modifier/${offre.id}`)}
                       className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       <Edit className="w-4 h-4" />
@@ -228,7 +214,7 @@ export default function MesOffres() {
         {/* Modal de confirmation de suppression */}
         {deleteConfirm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+            <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Trash2 className="w-8 h-8 text-red-600" />
@@ -241,13 +227,13 @@ export default function MesOffres() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold"
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold transition"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm)}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold transition"
                 >
                   Supprimer
                 </button>
@@ -256,6 +242,6 @@ export default function MesOffres() {
           </div>
         )}
       </div>
-    </div>
+    </RecruteurLayout>
   );
 }

@@ -122,55 +122,60 @@ export default function PublierOffre() {
     }
   };
 
-  const handleEtape1Submit = async () => {
-    if (!validateEtape1()) return;
+ const handleEtape1Submit = async () => {
+  if (!validateEtape1()) return;
 
-    setLoading(true);
-    setErrors({});
+  setLoading(true);
+  setErrors({});
 
-    try {
-      const payload = {
-        titre: formData.titre,
-        description: formData.description,
-        type_contrat: formData.type_contrat,
-        salaire: formData.salaire ? parseFloat(formData.salaire) : null,
-        date_limite: formData.date_limite || null,
-        statut: 'active'
-      };
+  try {
+    const payload = {
+      titre: formData.titre,
+      description: formData.description,
+      type_contrat: formData.type_contrat,
+      salaire: formData.salaire ? parseFloat(formData.salaire) : null,
+      date_limite: formData.date_limite || null,
+      statut: 'active'
+      // NE PAS inclure 'recruteur' ici - il est ajouté automatiquement côté backend
+    };
 
-      console.log('🚀 Création de l\'offre:', payload);
-      const response = await publierOffre(payload);
-      console.log('✅ Offre créée:', response);
+    console.log('🚀 Création de l\'offre:', payload);
+    console.log('📋 Champs envoyés:', Object.keys(payload));
+    
+    const response = await publierOffre(payload);
+    console.log('✅ Offre créée:', response);
+    
+    setOffreCreee(response);
+    setEtapeActuelle(2);
+
+  } catch (error) {
+    console.error('❌ Erreur:', error);
+    console.error('❌ Response data:', error.response?.data);
+    console.error('❌ Response status:', error.response?.status);
+    
+    if (error.response?.data) {
+      const apiErrors = error.response.data;
+      const formattedErrors = {};
       
-      setOffreCreee(response);
-      setEtapeActuelle(2);
-
-    } catch (error) {
-      console.error('❌ Erreur:', error);
+      Object.keys(apiErrors).forEach(key => {
+        const errorValue = apiErrors[key];
+        formattedErrors[key] = Array.isArray(errorValue) ? errorValue[0] : errorValue;
+      });
       
-      if (error.response?.data) {
-        const apiErrors = error.response.data;
-        const formattedErrors = {};
-        
-        Object.keys(apiErrors).forEach(key => {
-          const errorValue = apiErrors[key];
-          formattedErrors[key] = Array.isArray(errorValue) ? errorValue[0] : errorValue;
-        });
-        
-        setErrors(formattedErrors);
-      } else if (error.response?.status === 401) {
-        setErrors({ 
-          general: 'Vous devez être connecté pour publier une offre.' 
-        });
-      } else {
-        setErrors({ 
-          general: 'Une erreur est survenue. Veuillez réessayer.' 
-        });
-      }
-    } finally {
-      setLoading(false);
+      setErrors(formattedErrors);
+    } else if (error.response?.status === 401) {
+      setErrors({ 
+        general: 'Vous devez être connecté pour publier une offre.' 
+      });
+    } else {
+      setErrors({ 
+        general: 'Une erreur est survenue. Veuillez réessayer.' 
+      });
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ========================================
   // ÉTAPE 2 : COMPÉTENCES

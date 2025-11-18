@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { getAllLocListe } from '../api/DemandeApi'
 import  {SlidersHorizontal,Plus,Eye} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import {europeanDate} from '../utilities';
+import Menu from '../components/Menu';
 
 const filterChoices = {
     all : "Tout",
@@ -35,13 +37,18 @@ function DemandeLocalisation() {
         navigate(`/admin/localisation/${idDemande}/${idUtilisateur}`);
     }
   return (
-    <div className='right-pane'>
-        <h2 className='title'>Vérification de localisation</h2>
-        <div className='top-table-section'>
-             <button>
-                <SlidersHorizontal /> Filtrer
+    <div className="flex h-screen bg-gray-50">
+    <Menu/>
+    <div className='right-pane flex-1 p-8 overflow-y-auto'>
+        <h2 className='text-3xl font-bold text-gray-800 mb-6'>Vérification de localisation</h2>
+        <div className='flex top-table-section'>
+            <div className='filter-group'>
+             <button className="filter-button">
+                <SlidersHorizontal /> Filtres
             </button>
-            <select value={filter} onChange={onFilter}>
+            </div>
+            <div className='filter-group'>
+            <select value={filter} onChange={onFilter} className="select filter-select">
                 
                 {Object.entries(filterChoices).map(([key, label]) => (
                         <option key={key} value={key} >
@@ -49,9 +56,10 @@ function DemandeLocalisation() {
                         </option>
                     ))}
             </select>
+            </div>
         </div>
-        <div className='bottom-table-section'>
-            <table className='w-full border-collapse'>
+        <div className='bottom-table-section bg-white rounded-xl shadow-lg overflow-hidden mt-6'>
+            <table className='info-table w-full border-collapse'>
                 <thead>
                     <tr>
                         
@@ -81,10 +89,10 @@ function DemandeLocalisation() {
                                 <td>{demande.statut}</td>
                                 <td>{demande.id_admin_verificateur}</td>
                                 <td>{demande.created_by}</td>
-                                <td>{demande.created_at}</td>
+                                <td><span style={{ whiteSpace: "pre-line" }}>{europeanDate(demande.created_at)}</span></td>
                                 <td>
-                                    <button onClick={()=>VoirPlus(demande.id,demande.id_utilisateur)}>
-                                       <Eye size={20} strokeWidth={1.25} /> Voir plus
+                                    <button onClick={()=>VoirPlus(demande.id,demande.id_utilisateur)} className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-150">
+                                       <Eye size={20} strokeWidth={1.25} /><span>Voir plus</span>
                                     </button>
                                 </td>
                            </tr> 
@@ -94,6 +102,7 @@ function DemandeLocalisation() {
                 </table>
         </div>
 
+    </div>
     </div>
   )
 }

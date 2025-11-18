@@ -1,9 +1,11 @@
 from django.db import transaction
 from datetime import datetime
+
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.utils import timezone
+
 
 from administrateur.models import Signalement, Administrateur, HistoriqueValidation
 from administrateur.serializers import SignalementSerializer
@@ -75,7 +77,7 @@ def lister_signalement(request):
             return Response({
                 "success": False,
                 "message": "Cet utilisateur n'est pas autorisé à consulter",
-                "data": []
+                "list": []
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         match statut:
@@ -93,7 +95,7 @@ def lister_signalement(request):
         return Response({
             "success": True,
             "message": "",
-            "data": Signalement(list,many=True).data
+            "list": SignalementSerializer(list,many=True).data
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -126,21 +128,21 @@ def traiter_signalement(request,id_signalement,id_admin_responsable):
     try:
         signalement = Signalement.objects.get(id=id_signalement)
         statut= request.data.get("statut")
-        id_admin_responsable = Administrateur.objects.get(id=id_admin_responsable)
+        admin_responsable = Administrateur.objects.get(id=id_admin_responsable)
         decision = request.data.get("decision")
         date_traitement = timezone.now()
-        modified_by = id_admin_responsable
+        modified_by = Utilisateur.objects.get(id=admin_responsable.utilisateur_id)
         type_signalement= signalement.type_signalement
 
         signalement.statut=statut
-        signalement.id_admin_responsable=id_admin_responsable
+        signalement.id_admin_responsable=admin_responsable
         signalement.decision = decision
         signalement.date_traitement=date_traitement
         signalement.modified_by = modified_by
 
         action = {
-            "approuvee": ["suspension"],
-            "refusee": "reactivation"
+            "traite": ["suspension"],
+            "rejete": "reactivation"
         }
 
         with transaction.atomic():
@@ -160,8 +162,8 @@ def traiter_signalement(request,id_signalement,id_admin_responsable):
 
         return Response({
             "success": True,
-            "message": "",
-            "data": Signalement(list, many=True).data
+            "message": "Signalement modifié avec succès",
+            "list": []
         }, status=status.HTTP_200_OK)
 
     except Administrateur.DoesNotExist:
@@ -178,7 +180,7 @@ def traiter_signalement(request,id_signalement,id_admin_responsable):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
-def single_loc(request,signalement_id):
+def single_signal(request,signalement_id):
     try:
         code_admin = request.data.get('code_admin')
         admin_role = Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
@@ -190,12 +192,12 @@ def single_loc(request,signalement_id):
                 "data": []
             }, status=status.HTTP_401_UNAUTHORIZED)
 
-        list_demande = VerificationLocalisation.objects.get(id=demande_id)
+        list_sign = Signalement.objects.get(id=signalement_id)
 
         return Response({
             "success": True,
             "message": "",
-            "list": VerifLocationSerializer(list_demande).data
+            "list": SignalementSerializer(list_sign).data
         }, status=status.HTTP_200_OK)
 
     except Exception as e:

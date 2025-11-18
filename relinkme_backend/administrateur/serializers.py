@@ -42,3 +42,8 @@ class UtilisateurVerificationSerializers(serializers.ModelSerializer):
     class Meta:
         model = Utilisateur
         fields = ['code_utilisateur', 'nom_complet', 'email']
+
+class HistoriqueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model= HistoriqueValidation
+        fields= '__all__'

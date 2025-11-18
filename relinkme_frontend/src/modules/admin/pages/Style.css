@@ -1,0 +1,116 @@
+.right-pane {
+    margin-left: 16rem; 
+    width: calc(100vw - 16rem); 
+}
+
+.top-table-section {
+    display: flex;
+    justify-content: flex-end; 
+    gap: 1rem; 
+}
+.filter-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* space-x-2 */
+    padding: 8px 16px; /* py-2 px-4 */
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500; /* font-medium */
+    border: 1px solid #d1d5db; /* border border-gray-300 */
+    border-radius: 8px; /* rounded-lg */
+    color: #4b5563; /* text-gray-600 */
+    background-color: white;
+    transition: all 150ms ease-in-out;
+    height: 38px; /* Match height of select inputs for alignment */
+}
+
+.info-table th {
+    text-align: left;
+    padding: 12px 24px; 
+    background-color: #f3f4f6; 
+    color: #4b5563; 
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem; 
+    font-weight: 600; 
+    border-bottom: 1px solid #e5e7eb; 
+}
+
+.info-table td {
+    padding: 16px 24px; 
+    white-space: nowrap; 
+    font-size: 0.875rem; 
+    color: #1f2937; 
+    border-bottom: 1px solid #f9fafb; 
+}
+.info-table tbody tr:hover {
+    background-color: #eff6ff; 
+}
+
+
+select {
+    display: block;
+    width: 100%;
+    padding: 8px 12px; 
+    border: 1px solid #d1d5db; 
+    border-radius: 8px; 
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 150ms ease-in-out;
+    font-size: 0.875rem; 
+}
+select:focus {
+    outline: none;
+    border-color: #3b82f6; 
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); 
+}
+
+
+.edit-button {
+    color: #3b82f6; 
+    padding: 8px;
+    border-radius: 9999px; 
+    transition: color 150ms ease-in-out;
+}
+.edit-button:hover {
+    color: #1d4ed8; 
+}
+
+.delete-button {
+    color: #ef4444; 
+    padding: 8px; 
+    border-radius: 9999px; 
+    transition: color 150ms ease-in-out;
+}
+.delete-button:hover {
+    color: #b91c1c;
+}
+
+.form-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(17, 24, 39, 0.8); 
+    display: flex;
+    align-items: center; 
+    justify-content: center; 
+    z-index: 100; 
+    padding: 1rem;
+}
+input[type="text"] {
+    display: block;
+    width: 100%;
+    padding: 8px 12px; 
+    border: 1px solid #d1d5db; 
+    border-radius: 8px; 
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); 
+    transition: all 150ms ease-in-out;
+    font-size: 0.875rem; 
+   
+}
+input[type="text"]:focus {
+    outline: none;
+    border-color: #3b82f6; 
+    box-shadow: 0 0 0 1px #3b82f6; 
+}
+

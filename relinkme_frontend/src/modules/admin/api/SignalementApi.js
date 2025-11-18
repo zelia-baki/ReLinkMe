@@ -15,7 +15,7 @@
 
  export const traiterSignalement = async (idSignalement,idAdmin,formData) => {
         try {
-     const { data } = await axios.post(`admin/signalement/traitement/${idSignalement}/${idAdmin}}`,formData)
+     const { data } = await axios.post(`admin/signalement/traitement/${idSignalement}/${idAdmin}`,formData)
      return data;
    } catch (error) {
      console.error("Erreur :", error.response?.data || error.message);
@@ -36,6 +36,15 @@
 export const  listSignalement = async (statut,payload) => {
     try {
     const { data } = await axios.post(`admin/signalement/liste?statut=${statut}`,payload)
+    return data;
+  } catch (error) {
+    console.error("Erreur :", error.response?.data || error.message);
+    throw error;
+  }
+}
+export const  getSingleSignalement = async (idSign,payload) => {
+    try {
+    const { data } = await axios.post(`admin/signalement/${idSign}`,payload)
     return data;
   } catch (error) {
     console.error("Erreur :", error.response?.data || error.message);

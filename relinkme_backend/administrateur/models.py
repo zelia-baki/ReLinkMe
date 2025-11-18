@@ -95,7 +95,6 @@ class HistoriqueValidation(models.Model):
     id_enregistrement = models.IntegerField(null=True, blank=True)
     details = models.TextField(null=True, blank=True)
     date_action = models.DateTimeField(auto_now_add=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

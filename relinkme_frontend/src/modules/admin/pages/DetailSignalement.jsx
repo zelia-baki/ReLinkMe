@@ -1,19 +1,33 @@
 import React, { useEffect, useState } from 'react'
-import { getSingleDemande, getSingleUser, traiterDemande } from '../api/DemandeApi'
+import { getSingleUser,getSingleSignalement,traiterSignalement } from '../api/SignalementApi'
 import { useParams } from 'react-router-dom';
-import {FileText,SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
+import {OctagonAlert,SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
 import {europeanDate} from '../utilities';
 import Menu from '../components/Menu';
 import './Detail.css'
 
 const INITIAL_FORM_STATE = {
     statut: '',
-    motif_refus: '',
-    modified_by: 0
 };
-function DemandeConsulter() {
+const filterChoices = {
+    all : "Tout",
+    en_cours: "En cours",
+    en_attente: "En attente",
+    traite: "Traité",
+    rejete: "Rejeté"
+}
+const typeSignalement = {
+    profil_frauduleux: "Profil frauduleux",
+    contenu_inapproprie: "Contenu inappropié",
+    spam: "Spam",
+    harcelement: "Harcèlement",
+    fausse_offre: "Fausse offre",
+    autre: "Autre"
+}
+
+function DetailSignal() {
     const {id,idUtilisateur} = useParams() ;
-    const [demande,setDemande] = useState([]);
+    const [Signal,setSignal] = useState([]);
     const [userData,setUserData] = useState([]);
     const [writeMotif,setWriteMotif] = useState(false);
     const [modifiedBy,setModifiedBy] = useState(0);
@@ -25,24 +39,23 @@ function DemandeConsulter() {
     }
      const [formData, setFormData] = useState({
         statut: '',
-        motif_refus: '',
-        modified_by: adminData["idAdmin"]
+        decision:''
     })
 
     useEffect(()=>{
-        fetchDemande(id,{code_admin:adminData["codeAdmin"]});
+        fetchSignal(id,{code_admin:adminData["codeAdmin"]});
         fetchUser(idUtilisateur);
     },[])
 
-    const resetDemande = () => {
+    const resetSignal = () => {
         setFormData(INITIAL_FORM_STATE)
     }
-    const fetchDemande = async (idDmd,body) => {
+    const fetchSignal = async (idLoc,body) => {
         setLoading(true);
         try{
-             const data = await getSingleDemande(idDmd,body);
-            setDemande(data.list);
-                    console.log(data.list);
+            const data = await getSingleSignalement(idLoc,body);
+            setSignal(data.list);
+            console.log(data.list);
         } catch(error) {
             console.error("Error fetching demande:", error);
         } finally {
@@ -55,62 +68,59 @@ function DemandeConsulter() {
         console.log(data.list[0]);
 
     }
-    const modifyDemande = async (form) => {
-        const data = await traiterDemande(id,adminData['idAdmin'],form)
-        fetchDemande(id,{code_admin:adminData["codeAdmin"]});
+    const modifySignal = async (form) => {
+        const data = await traiterSignalement(id,adminData['idAdmin'],form)
+        fetchSignal(id,{code_admin:adminData["codeAdmin"]});
         
     }
     const handleChange = (e) => {
     setFormData(prev => ({
         ...prev,
-        motif_refus: e.target.value,
-        statut: "refusee"
+        decision: e.target.value,
+        statut: "rejete"
     }))
-};
-    const reject = () => {
+    }
+     const accept = () => {
         setWriteMotif(!writeMotif)
         console.log("clicked")
     }
+
     const confirm = () => {
         const updated = {
         ...formData,
-        statut: "refusee"
-    };
-        const data = modifyDemande(updated);
-        resetDemande();
+        statut: "traite"
+        };
+        const data = modifySignal(updated);
+        resetSignal();
         setWriteMotif(!writeMotif);
-        fetchDemande(id,{code_admin:adminData["codeAdmin"]});
+        fetchSignal(id,{code_admin:adminData["codeAdmin"]});
     }
-    const approve = () => {
-         const updated = {
+    const reject = () => {
+        const updated = {
         ...formData,
-        statut: "approuvee"
-        
-    };
+        statut: "rejete",
 
-        const data = modifyDemande(updated);
-        
-        resetDemande();
-        fetchDemande(id,{code_admin:adminData["codeAdmin"]});
+        };
+        const data = modifySignal(updated);
+        resetSignal();
+        fetchSignal(id,{code_admin:adminData["codeAdmin"]});
     }
-    
-    
     const cancel = () => {
         setWriteMotif(!writeMotif);
-        resetDemande();
+        resetSignal();
     }
     const getStatusBadge = (status) => {
         let text = 'Inconnu';
         let colorClass = 'bg-gray-500';
 
         switch (status) {
-            case 'approuvee':
-                text = 'Approuvée';
-                colorClass = 'bg-green-500';
-                break;
-            case 'refusee':
-                text = 'Refusé';
+            case 'traite':
+                text = 'Traité';
                 colorClass = 'bg-red-500';
+                break;
+            case 'rejete':
+                text = 'Rejeté';
+                colorClass = 'bg-green-500';
                 break;
             case 'en_attente':
                 text = 'En attente';
@@ -123,7 +133,7 @@ function DemandeConsulter() {
         }
         return <span className={`action-status-badge  ${colorClass}`}>{text}</span>;
     };
-    if (loading && Object.keys(demande).length === 0) {
+    if (loading && Object.keys(Signal).length === 0) {
         return (
             <>
                 <Menu/>
@@ -133,12 +143,13 @@ function DemandeConsulter() {
             </>
         )
     }
-
+    
   return (
-     <div className="flex h-screen bg-gray-50">
+
+    <div className="flex h-screen bg-gray-50">
     <Menu/>
     <div className='right-pane p-8 overflow-y-auto'>
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">Demande de vérification</h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">Signalement de contenu</h2>
         <div className='navigation-part'>
             <div className='previous'>
                 <button className='nav-arrow-button'>
@@ -146,10 +157,8 @@ function DemandeConsulter() {
                 </button>
             </div>
             <div className='user-identity-card'>
-                
                 <div className='user-identity-name'>{userData.nom_complet}</div>
-
-                <div className='space-y-1'>
+                <div>
                     <div className='user-identity-detail'>Code utilisateur: {userData.code_utilisateur}</div>
                     <div className='user-identity-detail'>Email: {userData.email}</div>
                 </div>
@@ -162,100 +171,132 @@ function DemandeConsulter() {
         </div>
         
         <div className='action-section'>
-            {getStatusBadge(demande.statut)}
-            {
-                (demande.statut != 'approuvee') && 
+             {getStatusBadge(Signal.statut)}
                 
+            {
+                (Signal.statut != 'rejete') &&
+                
+                <>
                 <div className='action-button-group' style={{ visibility: !writeMotif ? "visible" : "hidden" }}>
-                    <button onClick={approve}  className='approve-button'>
-                        <Check size={18} strokeWidth={1.25} /> Approuver
+                    <button onClick={accept} className='reject-button'>
+                        <Check size={18} strokeWidth={1.25} /> Accepter
                     </button>
-                    <button onClick={reject}  className='reject-button'>
-                        <X size={18} strokeWidth={1.25} /> Refuser
+                    <button onClick={reject} className='approve-button'>
+                        <X size={18} strokeWidth={1.25} /> Rejeter
                     </button>
                 </div>
-                
+                </>
                 
             }
         </div>
         <div className='info-part grid lg:grid-cols-2 gap-8'>
             <div className='detail-table-container'>
                 <h3 className="text-lg font-semibold flex items-center text-gray-800 mb-4 border-b pb-2">
+                    <OctagonAlert size={20} color="#1e2939" strokeWidth={1.75}/>
                     
-                    <FileText size={20} color="#1e2939" strokeWidth={1.75} />
-                    Informations de demande </h3>
-                <div className='table-container'>
-                     <table className='detail-table w-full'>
+                    <span>Informations sur le signalement</span> </h3>
+                <div  className='table-container'>
+                    <table className='detail-table w-full'>
                         <tbody>
                         <tr>
-                            <td className='label'>Code demande </td>
+                            <td className='label'>Code Signalement </td>
                             <td>:</td>
-                            <td>{demande.code_demande}</td>
+                            <td>{Signal.code_signalement}</td>
                         </tr>
                         <tr>
-                            <td className='label'>Type de vérification </td>
+                            <td className='label'>Type </td>
                             <td>:</td>
-                            <td>{demande.type_verification}</td>
+                            <td>{typeSignalement[Signal.type_signalement]}</td>
                         </tr>
                         <tr>
-                            <td className='label'>Motif de refus </td>
+                            <td className='label'>Description </td>
+                            <td>:</td>
+                            <td>{Signal.description}</td>
+                            
+                        </tr>
+                        <tr>
+                            <td className='label'>Décision </td>
                             <td>:</td>
                             {
                                 writeMotif ? 
-                                <td className='py-1'>
-                                    <input type="text" name="motif_refus" value={formData.motif_refus} onChange={handleChange}/>
-                                    <div className='flex items-end justify-end my-1.5'>
-                                        <button onClick={cancel} className='cancel-button'>
+                                <td>
+                                    <input type="text" name="motif_refus" value={formData.decision} onChange={handleChange}/>
+                                    <div>
+                                        <button onClick={cancel}>
                                             Annuler
                                         </button>
-                                        <button onClick={confirm} className='add-button'>
+                                        <button onClick={confirm}>
                                             Confirmer
                                         </button>
                                     </div>
                                 </td>
                                 :
-                                <td>{demande.motif_refus ||'-'}</td>
+                                <td>{(Signal.decision == null) ? "Aucune" : Signal.decision}</td>
                             }
                             
                         </tr>
                         <tr>
-                            <td className='label'>Date de soumission </td>
+                            <td className='label'>Auteur signalement </td>
                             <td>:</td>
-                            <td>{europeanDate(demande.date_soumission)}</td>
+                            <td>{Signal.id_signaleur}</td>
                         </tr>
                         <tr>
-                            <td className='label'>Date de traitement </td>
+                            <td className='label'>Date signalement </td>
                             <td>:</td>
-                            <td>{europeanDate(demande.date_traitement)}</td>
+                            <td>{europeanDate(Signal.date_signalement)}</td>
+                        </tr>
+                        <tr>
+                            <td className='label'>Date traitement  </td>
+                            <td>:</td>
+                            <td>{europeanDate(Signal.date_traitement)}</td>
+                        </tr>
+                        <tr>
+                            <td className='label'>Offre </td>
+                            <td>:</td>
+                            <td>{Signal.id_offre}</td>
+                        </tr>
+                        <tr>
+                            <td className='label'>Exploit</td>
+                            <td>:</td>
+                            <td>{Signal.id_exploit}</td>
+                        </tr>
+                        <tr>
+                            <td className='label'>Responsable </td>
+                            <td>:</td>
+                            <td>{Signal.id_admin_responsable}</td>
                         </tr>
                         <tr>
                             <td className='label'>Créé par </td>
                             <td>:</td>
-                            <td>{userData.email}</td>
+                            <td>{Signal.created_by}</td>
                         </tr>
                         <tr>
                             <td className='label'>Créé le </td>
                             <td>:</td>
-                            <td>{europeanDate(demande.created_at)}</td>
+                            <td>{europeanDate(Signal.created_at)}</td>
                         </tr>
                         <tr>
                             <td className='label'>Modifié par </td>
                             <td>:</td>
-                            <td>{demande.modified_by || '-'}</td>
+                            <td>{Signal.modified_by}</td>
                         </tr>
                         <tr>
                             <td className='label'>Modifié le </td>
                             <td>:</td>
-                            <td>{europeanDate(demande.updated_at)}</td>
+                            <td>{europeanDate(Signal.updated_at)}</td>
                         </tr>
                     </tbody>
                     </table>
                 </div>
             </div>
             <div className='left-pane'>
-                 <h3 className="text-lg font-semibold text-gray-800 p-4 ">Pièce justificative</h3>
-                
-
+                <h3 className="text-lg font-semibold text-gray-800 p-4 ">Preuve signalement</h3>
+                <iframe
+                    style={{border:0,width:"100%",height:"800px"}}
+                    loading="lazy"
+                    allowFullScreen
+                    src={Signal.preuves_url}>
+                </iframe>
             </div>
         </div>
 
@@ -264,4 +305,4 @@ function DemandeConsulter() {
   )
 }
 
-export default DemandeConsulter
+export default DetailSignal

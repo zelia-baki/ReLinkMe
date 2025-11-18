@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { getAllDemande } from '../api/DemandeApi'
 import  {SlidersHorizontal,Plus,Eye} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import {europeanDate} from '../utilities'; 
+import Menu from '../components/Menu';
+import './Style.css'
 
 const filterChoices = {
     all : "Tout",
@@ -38,33 +41,42 @@ function Demande() {
         navigate(`/admin/demande/${idDemande}/${idUtilisateur}`);
     }
   return (
-    <div className='right-pane'>
-        <h2 className='title'>Vérification d'identité</h2>
-        <div className='top-table-section'>
-             <button>
-                <SlidersHorizontal /> Filtrer
-            </button>
-            <label>Statut</label>
-            <select value={filter} onChange={onFilter}>
-                
-                {Object.entries(filterChoices).map(([key, label]) => (
-                        <option key={key} value={key} >
-                            {label}
-                        </option>
-                    ))}
-            </select>
-            <label>Statut</label>
-            <select value={filter} onChange={onFilter}>
-                
-                {Object.entries(filterChoices).map(([key, label]) => (
-                        <option key={key} value={key} >
-                            {label}
-                        </option>
-                    ))}
-            </select>
+    <div className="flex h-screen bg-gray-50">
+    <Menu/>
+    <div className='right-pane flex-1 p-8 overflow-y-auto'>
+        <h2 className='text-3xl font-bold text-gray-800 mb-6'>Vérification d'identité</h2>
+        <div className=" flex top-table-section">
+        <div className='filter-group'>
+        <label className='filter-label' style={{visibility:"hidden"}}>label</label>
+        <button className="filter-button">
+                        <SlidersHorizontal size={16} /> 
+                        <span>Filtres</span>
+                    </button>
         </div>
-        <div className='bottom-table-section'>
-            <table className='w-full border-collapse'>
+                    <div className="filter-group">
+                        <label className="filter-label">Statut</label>
+                        <select value={filter} onChange={onFilter} className="select filter-select">
+                            {Object.entries(filterChoices).map(([key, label]) => (
+                                <option key={`status-${key}`} value={key} >
+                                    {label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="filter-group">
+                        <label className="filter-label">Département</label>
+                        <select value={filter} onChange={onFilter} className="select filter-select">
+                            {Object.entries(filterChoices).map(([key, label]) => (
+                                <option key={`dept-${key}`} value={key} >
+                                    {label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+        </div>
+        <div className='bottom-table-section bg-white rounded-xl shadow-lg overflow-hidden mt-6'>
+            <table className='info-table w-full border-collapse'>
                 <thead>
                     <tr>
                         
@@ -92,12 +104,12 @@ function Demande() {
                                 <td>{demande.type_verification}</td>
                                 <td>{demande.statut}</td>
                                 <td>{demande.id_admin_responsable}</td>
-                                <td>{demande.date_soumission}</td>
+                                <td><span style={{ whiteSpace: "pre-line" }}>{europeanDate(demande.date_soumission)}</span></td>
                                 <td>{demande.created_by}</td>
-                                <td>{demande.created_at}</td>
+                                <td><span style={{ whiteSpace: "pre-line" }}>{europeanDate(demande.created_at)}</span></td>
                                 <td>
-                                    <button onClick={()=>VoirPlus(demande.id,demande.id_utilisateur)}>
-                                       <Eye size={20} strokeWidth={1.25} /> Voir plus
+                                    <button onClick={()=>VoirPlus(demande.id,demande.id_utilisateur)} className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-150">
+                                       <Eye size={20} strokeWidth={1.25} /><span>Voir plus</span>
                                     </button>
                                 </td>
                            </tr> 
@@ -107,6 +119,7 @@ function Demande() {
                 </table>
         </div>
 
+    </div>
     </div>
   )
 }

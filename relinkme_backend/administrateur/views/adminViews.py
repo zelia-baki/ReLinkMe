@@ -1,8 +1,8 @@
 from django.shortcuts import render
-from administrateur.models import Administrateur
+from administrateur.models import Administrateur, HistoriqueValidation
 from core.models import Utilisateur
 from administrateur.serializers import AdministrateurSerializer, UtilisateurSerializers, \
-    UtilisateurVerificationSerializers
+    UtilisateurVerificationSerializers, HistoriqueSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -192,3 +192,31 @@ def get_single_user(request,id_utilisateur):
             "message": str(e),
             "error": e.__class__.__name__
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_all_history(request,code_admin):
+    try:
+        role= Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
+
+        if (role != "super_admin"):
+            return Response({
+                "success": False,
+                "message": "Cet utilisateur n'est pas autorisé à consulter",
+                "data": []
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        liste = HistoriqueValidation.objects.all()
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": HistoriqueSerializer(liste,many=True).data
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

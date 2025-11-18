@@ -22,6 +22,15 @@ export const  getAllAdmin = async () => {
     throw error;
   }
 }
+export const  getAllAdminUser = async (id_admin=0,filter) => {
+    try {
+    const { data } = await axios.get(`admin/joined-list/${id_admin}?admin=${filter}`)
+    return data;
+  } catch (error) {
+    console.error("Erreur :", error.response?.data || error.message);
+    throw error;
+  }
+}
 
 export const getAdminById = async (code_admin) => {
        try {

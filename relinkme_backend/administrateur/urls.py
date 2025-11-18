@@ -8,6 +8,7 @@ urlpatterns= [
     path('update/<str:code_admin>/<str:code_manipulator>',update_admin),
     path('list',get_list_admin),
     path('list/<str:code_admin>',get_single_administrator),
+    path('joined-list/<int:id_admin>',get_list_admin_user),
     path('signalement/create/<int:id_signaleur>/<int:id_utilisateur_signale>',signaler),
     path('signalement/traitement/<int:id_signalement>/<int:id_admin_responsable>',traiter_signalement),
     path('signalement/delete/<int:id_signalement>',delete_admin),

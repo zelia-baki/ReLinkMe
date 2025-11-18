@@ -148,6 +148,26 @@ def get_list_admin(request):
         return Response({"success": False, "message": message, "error": error_type},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+def get_list_admin_user(request,id_admin=0):
+    try:
+
+
+        if id_admin != 0:
+            list_admin = Administrateur.objects.select_related('utilisateur').get(id=id_admin)
+            return Response(
+                {"success": True, "message": '', "list": AdministrateurSerializer(list_admin).data},
+                status=status.HTTP_200_OK)
+        else:
+            list_admin = Administrateur.objects.select_related('utilisateur').all()
+            return Response({"success":True,"message":'',"list": AdministrateurSerializer(list_admin,many=True).data},status=status.HTTP_200_OK)
+
+    except Exception as e:
+        error_type = e.__class__.__name__
+        message = CUSTOM_ERROR_MESSAGES.get(error_type, str(e))
+        return Response({"success": False, "message": message, "error": error_type},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 #<str:code_admin>
 @api_view(['GET'])
 def get_single_administrator(request,code_admin):
@@ -197,7 +217,7 @@ def get_single_user(request,id_utilisateur):
 def get_all_history(request,code_admin):
     try:
         role= Administrateur.objects.get(code_admin=code_admin).niveau_autorisation
-
+        user_admin = request.query_params.get("admin")
         if (role != "super_admin"):
             return Response({
                 "success": False,
@@ -206,6 +226,9 @@ def get_all_history(request,code_admin):
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         liste = HistoriqueValidation.objects.all()
+
+        if user_admin is not None and user_admin != "0" and user_admin != "":
+            liste = HistoriqueValidation.objects.filter(id_admin=(int) (user_admin))
 
         return Response({
             "success": True,

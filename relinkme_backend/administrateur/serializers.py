@@ -1,10 +1,12 @@
 from rest_framework import serializers
 
 from core.models import Utilisateur
+from core.serializers import UtilisateurSerializer
 from .models import Administrateur, DemandeVerification, HistoriqueValidation, VerificationLocalisation, Signalement
 
 
 class AdministrateurSerializer(serializers.ModelSerializer):
+    utilisateur= UtilisateurSerializer()
     class Meta:
         model = Administrateur
         fields = '__all__'

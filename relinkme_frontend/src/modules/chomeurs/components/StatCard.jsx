@@ -1,15 +1,30 @@
+// modules/chomeurs/components/StatCard.jsx
 import React from 'react';
+import Card from './Card';
 
 /**
- * Composant de carte de statistique
+ * 📊 Composant StatCard - Carte de statistique
+ * 
+ * @param {ReactNode} icon - Icône Lucide React
+ * @param {string} label - Libellé de la statistique
+ * @param {string|number} value - Valeur à afficher
+ * @param {string} color - Couleur du thème (blue, green, yellow, red, purple, gray)
+ * @param {function} onClick - Fonction au clic (rend la carte cliquable)
+ * @param {string} className - Classes CSS supplémentaires
  */
-export default function StatCard({ icon: Icon, label, value, color = "blue", onClick }) {
+export default function StatCard({ 
+  icon: Icon, 
+  label, 
+  value, 
+  color = 'blue', 
+  onClick,
+  className = ''
+}) {
   return (
-    <div 
-      className={`bg-white rounded-lg p-4 shadow-sm border border-gray-200 transition-all hover:shadow-md ${
-        onClick ? 'cursor-pointer' : ''
-      }`}
+    <Card 
       onClick={onClick}
+      hover={!!onClick}
+      className={className}
     >
       <div className="flex items-center gap-3">
         <div className={`p-3 bg-${color}-100 rounded-lg`}>
@@ -20,6 +35,6 @@ export default function StatCard({ icon: Icon, label, value, color = "blue", onC
           <p className="text-2xl font-bold text-gray-800">{value}</p>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

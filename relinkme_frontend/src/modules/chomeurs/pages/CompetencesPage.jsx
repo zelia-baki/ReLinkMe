@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Search, Filter, Trash2, AlertCircle } from "lucide-react";
-import { 
-  getChomeurCompetences, 
+import {
+  getChomeurCompetences,
   addCompetence,
   addCompetencesBulk,
   updateCompetence,
@@ -12,6 +12,8 @@ import { getAllCompetences } from "@/modules/core/api/competence.api";
 import CompetenceCard from "@/modules/chomeurs/components/CompetenceCard";
 import CompetenceModal from "@/modules/chomeurs/components/CompetenceModal";
 import CompetenceMultiSelectModal from "@/modules/chomeurs/components/CompetenceMultiSelectModal";
+import ChomeurLayout from '@/modules/chomeurs/layouts/ChomeurLayout';
+
 
 const MAX_COMPETENCES = 20;
 
@@ -22,12 +24,12 @@ export default function CompetencesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterNiveau, setFilterNiveau] = useState("all");
   const [filterCategorie, setFilterCategorie] = useState("all");
-  
+
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMultiSelectOpen, setIsMultiSelectOpen] = useState(false);
   const [selectedCompetence, setSelectedCompetence] = useState(null);
-  
+
   // Sélection multiple pour suppression
   const [selectedForDelete, setSelectedForDelete] = useState([]);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
@@ -91,7 +93,7 @@ export default function CompetencesPage() {
   // Suppression multiple
   const handleDeleteSelected = async () => {
     if (selectedForDelete.length === 0) return;
-    
+
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedForDelete.length} compétence(s) ?`)) {
       try {
         await deleteCompetencesBulk(selectedForDelete);
@@ -105,7 +107,7 @@ export default function CompetencesPage() {
   };
 
   const toggleSelectForDelete = (id) => {
-    setSelectedForDelete(prev => 
+    setSelectedForDelete(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -153,207 +155,208 @@ export default function CompetencesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Mes compétences</h1>
-              <p className="text-gray-600">
-                {competences.length}/{MAX_COMPETENCES} compétences • {remainingSlots} place(s) restante(s)
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {isDeleteMode ? (
-                <>
-                  <button
-                    onClick={() => {
-                      setIsDeleteMode(false);
-                      setSelectedForDelete([]);
-                    }}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={handleDeleteSelected}
-                    disabled={selectedForDelete.length === 0}
-                    className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${
-                      selectedForDelete.length === 0
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-red-600 text-white hover:bg-red-700'
-                    }`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Supprimer ({selectedForDelete.length})
-                  </button>
-                </>
-              ) : (
-                <>
-                  {competences.length > 0 && (
+    <ChomeurLayout>
+
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">Mes compétences</h1>
+                <p className="text-gray-600">
+                  {competences.length}/{MAX_COMPETENCES} compétences • {remainingSlots} place(s) restante(s)
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {isDeleteMode ? (
+                  <>
                     <button
-                      onClick={() => setIsDeleteMode(true)}
-                      className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 flex items-center gap-2"
+                      onClick={() => {
+                        setIsDeleteMode(false);
+                        setSelectedForDelete([]);
+                      }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      onClick={handleDeleteSelected}
+                      disabled={selectedForDelete.length === 0}
+                      className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${selectedForDelete.length === 0
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-red-600 text-white hover:bg-red-700'
+                        }`}
                     >
                       <Trash2 className="w-4 h-4" />
-                      Gérer
+                      Supprimer ({selectedForDelete.length})
                     </button>
-                  )}
-                  <button
-                    onClick={() => setIsMultiSelectOpen(true)}
-                    disabled={remainingSlots === 0}
-                    className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-sm ${
-                      remainingSlots === 0
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                  >
-                    <Plus className="w-5 h-5" />
-                    Ajouter des compétences
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Alerte limite */}
-        {competences.length >= MAX_COMPETENCES && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-red-800">Limite atteinte</p>
-              <p className="text-sm text-red-700">
-                Vous avez atteint la limite de {MAX_COMPETENCES} compétences. 
-                Supprimez-en pour en ajouter de nouvelles.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Stats rapides */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600">Total</p>
-            <p className="text-2xl font-bold text-gray-800">{stats.total}/{MAX_COMPETENCES}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600">Expert</p>
-            <p className="text-2xl font-bold text-green-600">{stats.expert}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600">Avancé</p>
-            <p className="text-2xl font-bold text-purple-600">{stats.avancé}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600">Intermédiaire</p>
-            <p className="text-2xl font-bold text-blue-600">{stats.intermédiaire}</p>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Rechercher une compétence..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-400" />
-              <select
-                value={filterCategorie}
-                onChange={(e) => setFilterCategorie(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">Toutes catégories</option>
-                {categories.filter(c => c !== 'all').map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <select
-                value={filterNiveau}
-                onChange={(e) => setFilterNiveau(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">Tous les niveaux</option>
-                <option value="débutant">Débutant</option>
-                <option value="intermédiaire">Intermédiaire</option>
-                <option value="avancé">Avancé</option>
-                <option value="expert">Expert</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Liste des compétences */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          {filteredCompetences.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-gray-400" />
+                  </>
+                ) : (
+                  <>
+                    {competences.length > 0 && (
+                      <button
+                        onClick={() => setIsDeleteMode(true)}
+                        className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Gérer
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setIsMultiSelectOpen(true)}
+                      disabled={remainingSlots === 0}
+                      className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-sm ${remainingSlots === 0
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                    >
+                      <Plus className="w-5 h-5" />
+                      Ajouter des compétences
+                    </button>
+                  </>
+                )}
               </div>
-              <p className="text-gray-600 mb-2">Aucune compétence trouvée</p>
-              {competences.length === 0 && (
-                <button
-                  onClick={() => setIsMultiSelectOpen(true)}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Ajouter vos premières compétences
-                </button>
-              )}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCompetences.map((comp) => (
-                <div key={comp.id} className="relative">
-                  {isDeleteMode && (
-                    <div className="absolute top-2 left-2 z-10">
-                      <input
-                        type="checkbox"
-                        checked={selectedForDelete.includes(comp.id)}
-                        onChange={() => toggleSelectForDelete(comp.id)}
-                        className="w-5 h-5 text-red-600 rounded focus:ring-red-500"
-                      />
-                    </div>
-                  )}
-                  <CompetenceCard
-                    competence={comp}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    showActions={!isDeleteMode}
-                  />
-                </div>
-              ))}
+          </div>
+
+          {/* Alerte limite */}
+          {competences.length >= MAX_COMPETENCES && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-800">Limite atteinte</p>
+                <p className="text-sm text-red-700">
+                  Vous avez atteint la limite de {MAX_COMPETENCES} compétences.
+                  Supprimez-en pour en ajouter de nouvelles.
+                </p>
+              </div>
             </div>
           )}
+
+          {/* Stats rapides */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-600">Total</p>
+              <p className="text-2xl font-bold text-gray-800">{stats.total}/{MAX_COMPETENCES}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-600">Expert</p>
+              <p className="text-2xl font-bold text-green-600">{stats.expert}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-600">Avancé</p>
+              <p className="text-2xl font-bold text-purple-600">{stats.avancé}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-600">Intermédiaire</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.intermédiaire}</p>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Rechercher une compétence..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="w-5 h-5 text-gray-400" />
+                <select
+                  value={filterCategorie}
+                  onChange={(e) => setFilterCategorie(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">Toutes catégories</option>
+                  {categories.filter(c => c !== 'all').map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <select
+                  value={filterNiveau}
+                  onChange={(e) => setFilterNiveau(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">Tous les niveaux</option>
+                  <option value="débutant">Débutant</option>
+                  <option value="intermédiaire">Intermédiaire</option>
+                  <option value="avancé">Avancé</option>
+                  <option value="expert">Expert</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Liste des compétences */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            {filteredCompetences.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-gray-600 mb-2">Aucune compétence trouvée</p>
+                {competences.length === 0 && (
+                  <button
+                    onClick={() => setIsMultiSelectOpen(true)}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Ajouter vos premières compétences
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredCompetences.map((comp) => (
+                  <div key={comp.id} className="relative">
+                    {isDeleteMode && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedForDelete.includes(comp.id)}
+                          onChange={() => toggleSelectForDelete(comp.id)}
+                          className="w-5 h-5 text-red-600 rounded focus:ring-red-500"
+                        />
+                      </div>
+                    )}
+                    <CompetenceCard
+                      competence={comp}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      showActions={!isDeleteMode}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Modal simple (modification) */}
+          <CompetenceModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            onSubmit={selectedCompetence ? handleUpdate : handleAdd}
+            competence={selectedCompetence}
+            competencesList={competencesList}
+          />
+
+          {/* Modal sélection multiple */}
+          <CompetenceMultiSelectModal
+            isOpen={isMultiSelectOpen}
+            onClose={() => setIsMultiSelectOpen(false)}
+            onSubmit={handleAddBulk}
+            competencesList={competencesList}
+            currentCompetencesCount={competences.length}
+            alreadySelectedIds={alreadySelectedIds}
+          />
         </div>
-
-        {/* Modal simple (modification) */}
-        <CompetenceModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          onSubmit={selectedCompetence ? handleUpdate : handleAdd}
-          competence={selectedCompetence}
-          competencesList={competencesList}
-        />
-
-        {/* Modal sélection multiple */}
-        <CompetenceMultiSelectModal
-          isOpen={isMultiSelectOpen}
-          onClose={() => setIsMultiSelectOpen(false)}
-          onSubmit={handleAddBulk}
-          competencesList={competencesList}
-          currentCompetencesCount={competences.length}
-          alreadySelectedIds={alreadySelectedIds}
-        />
       </div>
-    </div>
+    </ChomeurLayout>
   );
 }

@@ -1,13 +1,22 @@
+// modules/chomeurs/components/CompetenceCard.jsx
 import React from 'react';
 import { Edit2, Trash2, Award } from 'lucide-react';
-import { getNiveauBadge } from '../utils/helpers';
+import Badge from './Badge';
 
 /**
- * Composant carte de compétence
+ * 🏆 Composant CompetenceCard - Carte de compétence
+ * 
+ * @param {object} competence - Objet compétence avec {id, competence_nom, competence, niveau_maitrise, categorie}
+ * @param {function} onEdit - Fonction d'édition
+ * @param {function} onDelete - Fonction de suppression
+ * @param {boolean} showActions - Afficher les boutons d'action
  */
-export default function CompetenceCard({ competence, onEdit, onDelete, showActions = true }) {
-  const niveauInfo = getNiveauBadge(competence.niveau_maitrise);
-
+export default function CompetenceCard({ 
+  competence, 
+  onEdit, 
+  onDelete, 
+  showActions = true 
+}) {
   return (
     <div className="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all group">
       <div className="flex items-start justify-between mb-3">
@@ -26,9 +35,10 @@ export default function CompetenceCard({ competence, onEdit, onDelete, showActio
             )}
           </div>
         </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${niveauInfo.color}`}>
-          {niveauInfo.label}
-        </span>
+        
+        <Badge variant={competence.niveau_maitrise}>
+          {competence.niveau_maitrise.charAt(0).toUpperCase() + competence.niveau_maitrise.slice(1)}
+        </Badge>
       </div>
 
       {showActions && (

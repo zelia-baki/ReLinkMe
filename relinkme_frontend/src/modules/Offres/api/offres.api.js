@@ -125,32 +125,6 @@ export const checkIsRecruteur = async () => {
     return { isRecruteur: false, data: null };
   }
 };
-/**
- * 🧠 Récupère les compétences d'une offre
- */
-export const getCompetencesOffre = async (offreId) => {
-  try {
-    const response = await axios.get(`/recruteur/offres-competences/?offre=${offreId}`);
-    return response.data;
-  } catch (error) {
-    console.error("❌ Erreur récupération compétences offre:", error.response?.data || error.message);
-    throw error;
-  }
-};
-
-/**
- * 📝 Récupère les tests d'une offre
- */
-export const getTestsOffre = async (offreId) => {
-  try {
-    const response = await axios.get(`/recruteur/tests-competences/?offre=${offreId}`);
-    return response.data;
-  } catch (error) {
-    console.error("❌ Erreur récupération tests offre:", error.response?.data || error.message);
-    throw error;
-  }
-};
-
 
 export default {
   publierOffre,
@@ -162,6 +136,4 @@ export default {
   ajouterCompetences,
   ajouterTests,
   checkIsRecruteur,
-  getCompetencesOffre,
-  getTestsOffre
 };

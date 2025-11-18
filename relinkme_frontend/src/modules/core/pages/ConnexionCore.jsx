@@ -103,9 +103,9 @@ export default function ConnexionPage() {
         // Redirection selon le rôle
         const userRole = data.user.role;
         if (userRole === 'admin') {
-          window.location.href = '/admin/dashboard';
+          window.location.href = '/admin';
         } else if (userRole === 'recruteur') {
-          window.location.href = '/recruteur/mesoffres';
+          window.location.href = '/recruteur/profil';
         } else if (userRole === 'chomeur') {
           window.location.href = '/chomeur/profil';
         } else {

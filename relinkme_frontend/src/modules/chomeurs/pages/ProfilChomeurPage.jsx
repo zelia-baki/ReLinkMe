@@ -1,19 +1,28 @@
+// modules/chomeurs/pages/ProfilChomeur.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     User, Mail, Phone, MapPin, Briefcase, Award,
     TrendingUp, Send, Edit2, Plus, Coins,
-    Calendar, CheckCircle, Star, ArrowRight,
-    ExternalLink, Eye
+    Calendar, CheckCircle, Star, ArrowRight, Eye, Clock
 } from 'lucide-react';
+
+// API
 import { getMonProfil } from '@/modules/chomeurs/api/chomeur.api';
+import { getCandidatureStats } from '@/modules/candidatures/api/candidatures.api';
+
+// Utils
 import { getInitials, formatDate, getStatutInfo, getNiveauBadge } from '@/modules/chomeurs/utils/helpers';
+
+// Layout et Composants
+import ChomeurLayout from '@/modules/chomeurs/layouts/ChomeurLayout';
+import Card from '@/modules/chomeurs/components/Card';
+import Button from '@/modules/chomeurs/components/Button';
+import Badge from '@/modules/chomeurs/components/Badge';
+import SectionHeader from '@/modules/chomeurs/components/SectionHeader';
 import StatCard from '@/modules/chomeurs/components/StatCard';
 import CompetenceCard from '@/modules/chomeurs/components/CompetenceCard';
 import ExploitCard from '@/modules/chomeurs/components/ExploitCard';
-import { getCandidatureStats } from '@/modules/candidatures/api/candidatures.api';
-import CandidatureCard from '@/modules/candidatures/components/CandidatureCard';
-
 
 export default function ProfilChomeur() {
     const navigate = useNavigate();
@@ -28,7 +37,6 @@ export default function ProfilChomeur() {
     const [stats, setStats] = useState(null);
     const [candidatureStats, setCandidatureStats] = useState(null);
 
-
     useEffect(() => {
         fetchProfilData();
     }, []);
@@ -38,7 +46,7 @@ export default function ProfilChomeur() {
             setLoading(true);
             const [profilData, statsCandidat] = await Promise.all([
                 getMonProfil(),
-                getCandidatureStats() // 🆕 Ajout
+                getCandidatureStats()
             ]);
 
             setProfil(profilData.profil);
@@ -46,7 +54,7 @@ export default function ProfilChomeur() {
             setExploits(profilData.exploits || []);
             setCandidatures(profilData.candidatures || []);
             setStats(profilData.statistiques || {});
-            setCandidatureStats(statsCandidat); // 🆕 Ajout
+            setCandidatureStats(statsCandidat);
 
         } catch (err) {
             console.error('Erreur:', err);
@@ -65,32 +73,36 @@ export default function ProfilChomeur() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Chargement du profil...</p>
+            <ChomeurLayout>
+                <div className="min-h-screen flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600">Chargement du profil...</p>
+                    </div>
                 </div>
-            </div>
+            </ChomeurLayout>
         );
     }
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
-                    {error}
+            <ChomeurLayout>
+                <div className="min-h-screen flex items-center justify-center">
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
+                        {error}
+                    </div>
                 </div>
-            </div>
+            </ChomeurLayout>
         );
     }
 
     const utilisateur = profil?.utilisateur || {};
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
+        <ChomeurLayout>
+            <div className="max-w-7xl mx-auto p-6">
                 {/* Header Profile */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+                <Card className="mb-6">
                     <div className="flex flex-col md:flex-row gap-6">
                         <div className="flex-shrink-0">
                             <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
@@ -104,26 +116,32 @@ export default function ProfilChomeur() {
                                     <h1 className="text-3xl font-bold text-gray-800 mb-1">
                                         {utilisateur.nom_complet}
                                     </h1>
-                                    <p className="text-lg text-gray-600 mb-2">{profil?.profession || 'Profession non renseignée'}</p>
+                                    <p className="text-lg text-gray-600 mb-2">
+                                        {profil?.profession || 'Profession non renseignée'}
+                                    </p>
                                     <div className="flex items-center gap-2 flex-wrap">
                                         {getNiveauBadge(profil?.niveau_expertise).label && (
-                                            <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getNiveauBadge(profil?.niveau_expertise).color}`}>
+                                            <Badge variant={profil?.niveau_expertise}>
                                                 {getNiveauBadge(profil?.niveau_expertise).label}
-                                            </span>
+                                            </Badge>
                                         )}
-                                        <span className="text-sm text-gray-500">• Code: {profil?.code_chomeur}</span>
+                                        <span className="text-sm text-gray-500">
+                                            • Code: {profil?.code_chomeur}
+                                        </span>
                                     </div>
                                 </div>
-                                <button
+                                <Button
+                                    variant="primary"
+                                    icon={Edit2}
                                     onClick={() => navigate('/chomeur/parametres')}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
                                 >
-                                    <Edit2 className="w-4 h-4" />
                                     Modifier
-                                </button>
+                                </Button>
                             </div>
 
-                            <p className="text-gray-700 mb-4">{profil?.description || 'Aucune description'}</p>
+                            <p className="text-gray-700 mb-4">
+                                {profil?.description || 'Aucune description'}
+                            </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div className="flex items-center gap-2 text-gray-600">
@@ -140,15 +158,17 @@ export default function ProfilChomeur() {
                                 </div>
                                 <div className="flex items-center gap-2 text-gray-600">
                                     <Coins className="w-4 h-4 text-yellow-500" />
-                                    <span className="text-sm font-semibold">{profil?.solde_jetons || 0} jetons</span>
+                                    <span className="text-sm font-semibold">
+                                        {profil?.solde_jetons || 0} jetons
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </Card>
 
                 {/* Tabs Navigation */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-x-auto">
+                <Card noPadding className="mb-6 overflow-x-auto">
                     <div className="flex">
                         {tabs.map(tab => {
                             const Icon = tab.icon;
@@ -156,10 +176,11 @@ export default function ProfilChomeur() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex-1 min-w-max px-6 py-4 flex items-center justify-center gap-2 font-medium transition-colors ${activeTab === tab.id
-                                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                                        : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                                        }`}
+                                    className={`flex-1 min-w-max px-6 py-4 flex items-center justify-center gap-2 font-medium transition-colors ${
+                                        activeTab === tab.id
+                                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                                            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                    }`}
                                 >
                                     <Icon className="w-5 h-5" />
                                     {tab.label}
@@ -167,45 +188,30 @@ export default function ProfilChomeur() {
                             );
                         })}
                     </div>
-                </div>
+                </Card>
 
                 {/* Tab Content */}
                 <div className="space-y-6">
                     {/* APERÇU */}
                     {activeTab === 'apercu' && (
                         <>
-                            {/* Statistiques de candidatures */}
+                            {/* Stats candidatures */}
                             {candidatureStats && (
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-                                    <h2 className="text-xl font-bold text-gray-800 mb-4">Mes candidatures</h2>
+                                <Card>
+                                    <SectionHeader icon={Send} title="Mes candidatures" />
                                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                        <div className="bg-gray-50 rounded-lg p-4 text-center">
-                                            <p className="text-2xl font-bold text-gray-800">{candidatureStats.total}</p>
-                                            <p className="text-sm text-gray-600">Total</p>
-                                        </div>
-                                        <div className="bg-yellow-50 rounded-lg p-4 text-center">
-                                            <p className="text-2xl font-bold text-yellow-800">{candidatureStats.en_attente}</p>
-                                            <p className="text-sm text-yellow-700">En attente</p>
-                                        </div>
-                                        <div className="bg-blue-50 rounded-lg p-4 text-center">
-                                            <p className="text-2xl font-bold text-blue-800">{candidatureStats.vue}</p>
-                                            <p className="text-sm text-blue-700">Vues</p>
-                                        </div>
-                                        <div className="bg-green-50 rounded-lg p-4 text-center">
-                                            <p className="text-2xl font-bold text-green-800">{candidatureStats.acceptee}</p>
-                                            <p className="text-sm text-green-700">Acceptées</p>
-                                        </div>
-                                        <div className="bg-purple-50 rounded-lg p-4 text-center">
-                                            <p className="text-2xl font-bold text-purple-800">{candidatureStats.entretien}</p>
-                                            <p className="text-sm text-purple-700">Entretiens</p>
-                                        </div>
+                                        <StatCard icon={Briefcase} label="Total" value={candidatureStats.total} color="gray" />
+                                        <StatCard icon={Clock} label="En attente" value={candidatureStats.en_attente} color="yellow" />
+                                        <StatCard icon={Eye} label="Vues" value={candidatureStats.vue} color="blue" />
+                                        <StatCard icon={CheckCircle} label="Acceptées" value={candidatureStats.acceptee} color="green" />
+                                        <StatCard icon={Star} label="Entretiens" value={candidatureStats.entretien} color="purple" />
                                     </div>
-                                </div>
+                                </Card>
                             )}
 
                             {/* Actions rapides */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-                                <h2 className="text-xl font-bold text-gray-800 mb-4">Actions rapides</h2>
+                            <Card>
+                                <SectionHeader icon={ArrowRight} title="Actions rapides" />
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <button
                                         onClick={() => navigate('/offres')}
@@ -246,10 +252,10 @@ export default function ProfilChomeur() {
                                         </div>
                                     </button>
                                 </div>
-                            </div>
+                            </Card>
 
                             {/* Dernières candidatures */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <Card>
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-xl font-bold text-gray-800">Dernières candidatures</h2>
                                     <button
@@ -270,9 +276,9 @@ export default function ProfilChomeur() {
                                                         <h3 className="font-semibold text-gray-800">{cand.offre?.titre}</h3>
                                                         <p className="text-sm text-gray-600">{cand.offre?.entreprise}</p>
                                                     </div>
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statutInfo.color}`}>
+                                                    <Badge variant={cand.statut}>
                                                         {statutInfo.label}
-                                                    </span>
+                                                    </Badge>
                                                 </div>
                                                 <div className="flex items-center gap-4 text-xs text-gray-500">
                                                     <span className="flex items-center gap-1">
@@ -288,23 +294,26 @@ export default function ProfilChomeur() {
                                         );
                                     })}
                                 </div>
-                            </div>
+                            </Card>
                         </>
                     )}
 
                     {/* COMPÉTENCES */}
                     {activeTab === 'competences' && (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-gray-800">Mes compétences</h2>
-                                <button
-                                    onClick={() => navigate('/chomeur/competences')}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Gérer
-                                </button>
-                            </div>
+                        <Card>
+                            <SectionHeader
+                                icon={Award}
+                                title="Mes compétences"
+                                action={
+                                    <Button
+                                        variant="primary"
+                                        icon={Plus}
+                                        onClick={() => navigate('/chomeur/competences')}
+                                    >
+                                        Gérer
+                                    </Button>
+                                }
+                            />
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {competences.length === 0 ? (
                                     <div className="col-span-full text-center py-8 text-gray-500">
@@ -316,22 +325,25 @@ export default function ProfilChomeur() {
                                     ))
                                 )}
                             </div>
-                        </div>
+                        </Card>
                     )}
 
                     {/* EXPLOITS */}
                     {activeTab === 'exploits' && (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-gray-800">Portfolio</h2>
-                                <button
-                                    onClick={() => navigate('/chomeur/exploits')}
-                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Gérer
-                                </button>
-                            </div>
+                        <Card>
+                            <SectionHeader
+                                icon={TrendingUp}
+                                title="Portfolio"
+                                action={
+                                    <Button
+                                        variant="secondary"
+                                        icon={Plus}
+                                        onClick={() => navigate('/chomeur/exploits')}
+                                    >
+                                        Gérer
+                                    </Button>
+                                }
+                            />
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {exploits.length === 0 ? (
                                     <div className="col-span-full text-center py-8 text-gray-500">
@@ -343,13 +355,13 @@ export default function ProfilChomeur() {
                                     ))
                                 )}
                             </div>
-                        </div>
+                        </Card>
                     )}
 
                     {/* CANDIDATURES */}
                     {activeTab === 'candidatures' && (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <h2 className="text-xl font-bold text-gray-800 mb-6">Toutes mes candidatures</h2>
+                        <Card>
+                            <SectionHeader icon={Send} title="Toutes mes candidatures" />
                             <div className="space-y-4">
                                 {candidatures.length === 0 ? (
                                     <div className="text-center py-8 text-gray-500">
@@ -364,9 +376,9 @@ export default function ProfilChomeur() {
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3 mb-2">
                                                             <h3 className="font-bold text-gray-800">{cand.offre?.titre}</h3>
-                                                            <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statutInfo.color}`}>
+                                                            <Badge variant={cand.statut}>
                                                                 {statutInfo.label}
-                                                            </span>
+                                                            </Badge>
                                                         </div>
                                                         <p className="text-sm text-gray-600 mb-1">{cand.offre?.entreprise}</p>
                                                         <div className="flex items-center gap-4 text-xs text-gray-500">
@@ -384,19 +396,24 @@ export default function ProfilChomeur() {
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 border border-blue-300 rounded hover:bg-blue-50">
-                                                        <Eye className="w-4 h-4" />
-                                                    </button>
+                                                    <Button
+                                                        variant="outline"
+                                                        icon={Eye}
+                                                        size="sm"
+                                                        onClick={() => navigate(`/chomeur/candidatures/${cand.id}`)}
+                                                    >
+                                                        Voir
+                                                    </Button>
                                                 </div>
                                             </div>
                                         );
                                     })
                                 )}
                             </div>
-                        </div>
+                        </Card>
                     )}
                 </div>
             </div>
-        </div>
+        </ChomeurLayout>
     );
 }

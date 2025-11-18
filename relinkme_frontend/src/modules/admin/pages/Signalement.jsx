@@ -48,14 +48,19 @@ function Signalement() {
         navigate(`/admin/signalement/${idSignal}/${idUtilisateur}`);
     }
   return (
-    <>
+    <div className="flex h-screen bg-gray-50">
     <Menu/>
-    <div className='right-pane'>
-        <h2 className='title'>Liste des signalements</h2>
-        <div className='top-table-section'>
-             <button>
-                <SlidersHorizontal /> Filtrer
-            </button>
+    <div className='right-pane flex-1 p-8 overflow-y-auto'>
+        <h2 className='text-3xl font-bold text-gray-800 mb-6'>Liste des signalements</h2>
+        <div className='flex top-table-section'>
+             <div className='filter-group'>
+                <label className='filter-label' style={{visibility:"hidden"}}>label</label>
+                     <button className="filter-button">
+                                     <SlidersHorizontal size={16} /> 
+                                     <span>Filtres</span>
+                                 </button>
+                     </div>
+            <div className='filter-group'>
             <label>Statut</label>
             <select value={filter} onChange={onFilter}>
                 
@@ -65,21 +70,12 @@ function Signalement() {
                         </option>
                     ))}
             </select>
-            <label>Statut</label>
-            <select value={filter} onChange={onFilter}>
-                
-                {Object.entries(filterChoices).map(([key, label]) => (
-                        <option key={key} value={key} >
-                            {label}
-                        </option>
-                    ))}
-            </select>
+            </div>
         </div>
-        <div className='bottom-table-section'>
-            <table className='w-full border-collapse'>
+        <div className='bottom-table-section bg-white rounded-xl shadow-lg overflow-hidden mt-6'>
+            <table className='info-table w-full border-collapse'>
                 <thead>
-                    <tr>
-                        
+                    <tr>         
                             <th>#</th>
                             <th>Code signalement</th>
                             <th>Type signalement</th>
@@ -88,11 +84,7 @@ function Signalement() {
                             <th>Statut</th>
                             <th>Date de signalement</th>
                             <th>Responsable</th>
-                            <th>Créé par</th>
-                            <th>Créé le</th>
-                            <th></th>
-                            
-                        
+                            <th></th>      
                     </tr>
                 </thead>
                 <tbody>
@@ -107,11 +99,9 @@ function Signalement() {
                                 <td>{filterChoices[signal.statut]}</td>
                                 <td>{signal.date_signalement}</td>
                                 <td>{signal.id_admin_responsable}</td>
-                                <td>{signal.created_by}</td>
-                                <td>{europeanDate(signal.created_at)}</td>
                                 <td>
-                                    <button onClick={()=>VoirPlus(signal.id,signal.id_utilisateur_signale)}>
-                                       <Eye size={20} strokeWidth={1.25} /> Voir plus
+                                    <button onClick={()=>VoirPlus(signal.id,signal.id_utilisateur_signale)} className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-150">
+                                       <Eye size={20} strokeWidth={1.25} /><span> Voir plus </span>
                                     </button>
                                 </td>
                            </tr> 
@@ -122,7 +112,7 @@ function Signalement() {
         </div>
 
     </div>
-    </>
+    </div>
   )
 }
 

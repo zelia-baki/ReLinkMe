@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { getSingleUser,getSingleSignalement,traiterSignalement } from '../api/SignalementApi'
 import { useParams } from 'react-router-dom';
-import {SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
+import {OctagonAlert,SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
 import {europeanDate} from '../utilities';
 import Menu from '../components/Menu';
+import './Detail.css'
 
 const INITIAL_FORM_STATE = {
     statut: '',
@@ -30,6 +31,7 @@ function DetailSignal() {
     const [userData,setUserData] = useState([]);
     const [writeMotif,setWriteMotif] = useState(false);
     const [modifiedBy,setModifiedBy] = useState(0);
+    const [loading, setLoading] = useState(true);
     
     const adminData = {
         codeAdmin: "ADM00015",
@@ -49,9 +51,16 @@ function DetailSignal() {
         setFormData(INITIAL_FORM_STATE)
     }
     const fetchSignal = async (idLoc,body) => {
-             const data = await getSingleSignalement(idLoc,body);
+        setLoading(true);
+        try{
+            const data = await getSingleSignalement(idLoc,body);
             setSignal(data.list);
-                    console.log(data.list);
+            console.log(data.list);
+        } catch(error) {
+            console.error("Error fetching demande:", error);
+        } finally {
+            setLoading(false);
+        }
     };
     const fetchUser = async (id) => {
         const data = await getSingleUser(id)
@@ -100,47 +109,79 @@ function DetailSignal() {
         setWriteMotif(!writeMotif);
         resetSignal();
     }
+    const getStatusBadge = (status) => {
+        let text = 'Inconnu';
+        let colorClass = 'bg-gray-500';
+
+        switch (status) {
+            case 'traite':
+                text = 'Traité';
+                colorClass = 'bg-red-500';
+                break;
+            case 'rejete':
+                text = 'Rejeté';
+                colorClass = 'bg-green-500';
+                break;
+            case 'en_attente':
+                text = 'En attente';
+                colorClass = 'bg-blue-500';
+                break;
+            default:
+                text = status || 'Inconnu';
+                colorClass = 'bg-gray-500';
+                break;
+        }
+        return <span className={`action-status-badge  ${colorClass}`}>{text}</span>;
+    };
+    if (loading && Object.keys(Signal).length === 0) {
+        return (
+            <>
+                <Menu/>
+                <div className='right-pane p-8 flex items-center justify-center h-screen'>
+                    <div className="text-xl font-medium text-gray-500">Chargement des détails de la demande...</div>
+                </div>
+            </>
+        )
+    }
     
   return (
 
-    <>
+    <div className="flex h-screen bg-gray-50">
     <Menu/>
-    <div className='right-pane'>
-        <h2>Signalement de contenu</h2>
+    <div className='right-pane p-8 overflow-y-auto'>
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">Signalement de contenu</h2>
         <div className='navigation-part'>
             <div className='previous'>
-                <button>
+                <button className='nav-arrow-button'>
                     <SquareChevronLeft size={30} strokeWidth={0.75} />
                 </button>
             </div>
-            <div className='identite'>
+            <div className='user-identity-card'>
+                <div className='user-identity-name'>{userData.nom_complet}</div>
                 <div>
-                    <div>Signalé: {userData.nom_complet}</div>
-
+                    <div className='user-identity-detail'>Code utilisateur: {userData.code_utilisateur}</div>
+                    <div className='user-identity-detail'>Email: {userData.email}</div>
                 </div>
-                <div>Code utilisateur: {userData.code_utilisateur}</div>
-                <div>Email: {userData.email}</div>
             </div>
             <div className='next'>
-                <button>
+                <button className='nav-arrow-button'>
                     <SquareChevronRight size={30} strokeWidth={0.75} />
                 </button>
             </div>
         </div>
         
-        <hr></hr>
-        <div className='action'>
-            <div>{filterChoices[Signal.statut]}</div>
+        <div className='action-section'>
+             {getStatusBadge(Signal.statut)}
                 
             {
                 (Signal.statut != 'rejete') &&
                 
                 <>
-                <div style={{ visibility: !writeMotif ? "visible" : "hidden" }}>
-                    <button onClick={accept}>
+                <div className='action-button-group' style={{ visibility: !writeMotif ? "visible" : "hidden" }}>
+                    <button onClick={accept} className='reject-button'>
                         <Check size={18} strokeWidth={1.25} /> Accepter
                     </button>
-                    <button onClick={reject}>
+                    <button onClick={reject} className='approve-button'>
                         <X size={18} strokeWidth={1.25} /> Rejeter
                     </button>
                 </div>
@@ -148,17 +189,14 @@ function DetailSignal() {
                 
             }
         </div>
-        <div className='info-part'>
-            <div className='identity-part'>
-                <div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                            </tr>
-                        </thead>
+        <div className='info-part grid lg:grid-cols-2 gap-8'>
+            <div className='detail-table-container'>
+                <h3 className="text-lg font-semibold flex items-center text-gray-800 mb-4 border-b pb-2">
+                    <OctagonAlert size={20} color="#1e2939" strokeWidth={1.75}/>
+                    
+                    <span>Informations sur le signalement</span> </h3>
+                <div  className='table-container'>
+                    <table className='detail-table w-full'>
                         <tbody>
                         <tr>
                             <td className='label'>Code Signalement </td>
@@ -251,7 +289,8 @@ function DetailSignal() {
                     </table>
                 </div>
             </div>
-            <div className='pece-justificative'>
+            <div className='left-pane'>
+                <h3 className="text-lg font-semibold text-gray-800 p-4 ">Preuve signalement</h3>
                 <iframe
                     style={{border:0,width:"100%",height:"800px"}}
                     loading="lazy"
@@ -262,7 +301,7 @@ function DetailSignal() {
         </div>
 
     </div>
-    </>
+    </div>
   )
 }
 

@@ -27,6 +27,7 @@ import CandidaturesRecues from '@/modules/candidatures/pages/CandidaturesRecues'
 import DetailCandidature from '@/modules/candidatures/pages/DetailCandidature';
 import Menu from "./modules/admin/components/Menu";
 import { AuthProvider } from "./modules/admin/context/AuthContext";
+import Historique from "./modules/admin/pages/Historique";
 
 
 
@@ -71,7 +72,7 @@ function App() {
         <Route path="admin/localisation/:id/:idUtilisateur" element={<DetailLoc/>}/>
         <Route path="admin/signalement" element={<Signalement/>}/>
         <Route path="admin/signalement/:id/:idUtilisateur" element={<DetailSignal/>}/>
-        <Route path="menu" element={<Menu/>}/>
+        <Route path="admin/historique" element={<Historique/>}/>
 
         {/* Routes Recruteur */}
         <Route path="/recruteur/inscription" element={<InscriptionRecruteur />} />

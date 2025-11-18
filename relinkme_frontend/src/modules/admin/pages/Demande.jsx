@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import {europeanDate} from '../utilities'; 
 import Menu from '../components/Menu';
 import './Style.css'
+import { useAuth } from '../context/AuthContext';
 
 const filterChoices = {
     all : "Tout",
@@ -15,17 +16,25 @@ const filterChoices = {
 }
 
 function Demande() {
+    const { adminRole, name, email, codeAdmin,idAdmin  } = useAuth(); 
     const navigate = useNavigate()
     const [listDemande,setListDemande] = useState([])
     const [filter,setFilter] = useState("all")
     const adminInfo = {
-        codeAdmin: "ADM00015",
-        idAdmin:15
+        codeAdmin: codeAdmin,
+        idAdmin: idAdmin
     }
-    const [codeAdmin,setCodeAdmin] = useState("ADM00015")
+    
 
     useEffect(()=>{
-        fetchListDemande(filter,{code_admin:adminInfo["codeAdmin"]})
+        console.log('Auth Context Values:', {
+        adminRole,
+        codeAdmin,
+        name,
+        email,
+    });
+
+        fetchListDemande(filter,{code_admin:"ADM00015"})
     },[])
 
     const fetchListDemande = async (filter,body) => {
@@ -42,7 +51,11 @@ function Demande() {
     }
   return (
     <div className="flex h-screen bg-gray-50">
-    <Menu/>
+    <Menu
+        name={name}
+        email={email}
+        role={adminRole}
+    />
     <div className='right-pane flex-1 p-8 overflow-y-auto'>
         <h2 className='text-3xl font-bold text-gray-800 mb-6'>Vérification d'identité</h2>
         <div className=" flex top-table-section">

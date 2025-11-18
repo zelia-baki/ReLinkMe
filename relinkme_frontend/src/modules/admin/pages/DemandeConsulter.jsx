@@ -4,7 +4,8 @@ import { useParams } from 'react-router-dom';
 import {FileText,SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
 import {europeanDate} from '../utilities';
 import Menu from '../components/Menu';
-import './Detail.css'
+import './Detail.css';
+import { useAuth } from '../context/AuthContext';
 
 const INITIAL_FORM_STATE = {
     statut: '',
@@ -12,6 +13,7 @@ const INITIAL_FORM_STATE = {
     modified_by: 0
 };
 function DemandeConsulter() {
+    const { adminRole, name, email, codeAdmin,idAdmin  } = useAuth(); 
     const {id,idUtilisateur} = useParams() ;
     const [demande,setDemande] = useState([]);
     const [userData,setUserData] = useState([]);
@@ -20,8 +22,8 @@ function DemandeConsulter() {
     const [loading, setLoading] = useState(true);
     
     const adminData = {
-        codeAdmin: "ADM00015",
-        idAdmin:15
+        codeAdmin: codeAdmin,
+        idAdmin: idAdmin
     }
      const [formData, setFormData] = useState({
         statut: '',
@@ -126,7 +128,11 @@ function DemandeConsulter() {
     if (loading && Object.keys(demande).length === 0) {
         return (
             <>
-                <Menu/>
+                <Menu
+                    name={name}
+                    email={email}
+                    role={adminRole}
+                />
                 <div className='right-pane p-8 flex items-center justify-center h-screen'>
                     <div className="text-xl font-medium text-gray-500">Chargement des détails de la demande...</div>
                 </div>
@@ -136,7 +142,11 @@ function DemandeConsulter() {
 
   return (
      <div className="flex h-screen bg-gray-50">
-    <Menu/>
+    <Menu
+        name={name}
+        email={email}
+        role={adminRole}
+    />
     <div className='right-pane p-8 overflow-y-auto'>
         <h2 className="text-3xl font-bold text-gray-800 mb-6">Demande de vérification</h2>
         <div className='navigation-part'>

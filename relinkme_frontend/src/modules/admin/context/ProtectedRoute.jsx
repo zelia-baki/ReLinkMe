@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 const ProtectedRoute = ({ allowedRoles }) => {
-    const { isLoggedIn, userRole } = useAuth();
+    const { adminRole, adminId, codeAdmin, name, email, isLoggedIn } = useAuth(); 
 
     if (!isLoggedIn) {
         return <Navigate to="/admin/login" replace />;
@@ -11,7 +11,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
 
     if (
         allowedRoles &&
-        !allowedRoles.map(r => r.toLowerCase()).includes(userRole?.toLowerCase())
+        !allowedRoles.map(r => r.toLowerCase()).includes(adminRole?.toLowerCase())
     ) {
         return <Navigate to="/admin/unauthorized" replace />;
     }

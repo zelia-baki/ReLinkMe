@@ -4,6 +4,7 @@ import  {SlidersHorizontal,Plus,Eye} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import {europeanDate} from '../utilities';
 import Menu from '../components/Menu';
+import { useAuth } from '../context/AuthContext';
 
 const filterChoices = {
     all : "Tout",
@@ -12,12 +13,13 @@ const filterChoices = {
 }
 
 function DemandeLocalisation() {
+     const { adminRole, name, email, codeAdmin,idAdmin  } = useAuth(); 
     const navigate = useNavigate()
     const [listLoc,setListLoc] = useState([])
     const [filter,setFilter] = useState("all")
     const adminInfo = {
-        codeAdmin: "ADM00015",
-        idAdmin:15
+        codeAdmin: codeAdmin,
+        idAdmin: idAdmin
     }
 
     useEffect(()=>{
@@ -38,7 +40,11 @@ function DemandeLocalisation() {
     }
   return (
     <div className="flex h-screen bg-gray-50">
-    <Menu/>
+    <Menu
+        name={name}
+        email={email}
+        role={adminRole}
+    />
     <div className='right-pane flex-1 p-8 overflow-y-auto'>
         <h2 className='text-3xl font-bold text-gray-800 mb-6'>Vérification de localisation</h2>
         <div className='flex top-table-section'>

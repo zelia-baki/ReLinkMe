@@ -41,6 +41,8 @@ import DetailCandidature from '@/modules/candidatures/pages/DetailCandidature';
 
 // ==================== ROUTES PROTÉGÉES ====================
 import RecruteurRoute from "./components/routes/RecruteurRoute";
+import Login from "./modules/admin/pages/Login";
+import ProtectedRoute from "./modules/admin/context/ProtectedRoute";
 
 function App() {
   const ROLES = {
@@ -50,7 +52,7 @@ function App() {
   };
 
   return (
-    <AuthProvider>
+    
       <BrowserRouter>
         <Routes>
           {/* ==================== AUTHENTIFICATION ==================== */}
@@ -86,13 +88,28 @@ function App() {
 
           {/* ==================== ADMIN ==================== */}
           <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/demande" element={<Demande />} />
-          <Route path="/admin/demande/:id/:idUtilisateur" element={<DemandeConsulter />} />
-          <Route path="/admin/localisation" element={<DemandeLocalisation />} />
-          <Route path="/admin/localisation/:id/:idUtilisateur" element={<DetailLoc />} />
-          <Route path="/admin/signalement" element={<Signalement />} />
-          <Route path="/admin/signalement/:id/:idUtilisateur" element={<DetailSignal />} />
-          <Route path="/admin/historique" element={<Historique />} />
+          <Route path="/admin/login" element={<Login/>}/>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_VALIDATION]} />}>
+            <Route path="/admin/demande" element={<Demande />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_VALIDATION]} />}>
+            <Route path="/admin/demande/:id/:idUtilisateur" element={<DemandeConsulter />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_VALIDATION]} />}>
+            <Route path="/admin/localisation" element={<DemandeLocalisation />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_VALIDATION]} />}>
+            <Route path="/admin/localisation/:id/:idUtilisateur" element={<DetailLoc />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_MODERATION]} />}>
+            <Route path="/admin/signalement" element={<Signalement />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_MODERATION]} />}>
+            <Route path="/admin/signalement/:id/:idUtilisateur" element={<DetailSignal />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]} />}>
+            <Route path="/admin/historique" element={<Historique />} />
+          </Route>
 
           {/* ==================== PAGE PAR DÉFAUT ==================== */}
           <Route path="/" element={<ConnexionPage />} />
@@ -111,7 +128,7 @@ function App() {
           } />
         </Routes>
       </BrowserRouter>
-    </AuthProvider>
+  
   );
 }
 

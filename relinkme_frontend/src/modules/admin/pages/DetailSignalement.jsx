@@ -5,6 +5,7 @@ import {OctagonAlert,SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-
 import {europeanDate} from '../utilities';
 import Menu from '../components/Menu';
 import './Detail.css'
+import { useAuth } from '../context/AuthContext';
 
 const INITIAL_FORM_STATE = {
     statut: '',
@@ -26,6 +27,7 @@ const typeSignalement = {
 }
 
 function DetailSignal() {
+    const { adminRole, name, email, codeAdmin,idAdmin  } = useAuth(); 
     const {id,idUtilisateur} = useParams() ;
     const [Signal,setSignal] = useState([]);
     const [userData,setUserData] = useState([]);
@@ -34,8 +36,8 @@ function DetailSignal() {
     const [loading, setLoading] = useState(true);
     
     const adminData = {
-        codeAdmin: "ADM00015",
-        idAdmin:15
+         codeAdmin: codeAdmin,
+        idAdmin: idAdmin
     }
      const [formData, setFormData] = useState({
         statut: '',
@@ -136,7 +138,11 @@ function DetailSignal() {
     if (loading && Object.keys(Signal).length === 0) {
         return (
             <>
-                <Menu/>
+                <Menu
+        name={name}
+        email={email}
+        role={adminRole}
+    />
                 <div className='right-pane p-8 flex items-center justify-center h-screen'>
                     <div className="text-xl font-medium text-gray-500">Chargement des détails de la demande...</div>
                 </div>
@@ -147,7 +153,11 @@ function DetailSignal() {
   return (
 
     <div className="flex h-screen bg-gray-50">
-    <Menu/>
+    <Menu
+        name={name}
+        email={email}
+        role={adminRole}
+    />
     <div className='right-pane p-8 overflow-y-auto'>
         <h2 className="text-3xl font-bold text-gray-800 mb-6">Signalement de contenu</h2>
         <div className='navigation-part'>

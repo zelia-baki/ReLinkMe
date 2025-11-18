@@ -9,6 +9,8 @@ export const AuthProvider = ({children}) => {
     const [adminId,setAdminId] = useState(0);
     const [codeAdmin,setCodeAdmin] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [name,setAdminName] = useState(null);
+    const [email,setAdminEmail] = useState(null);
 
     const ROLES = {
         SUPER_ADMIN: "super_admin",
@@ -16,24 +18,30 @@ export const AuthProvider = ({children}) => {
         ADMIN_MODERATION: 'admin_moderation'
     }
 
-    const login = (role,id,code) => {
+    const login = (role,id,code,nom,email) => {
         setAdminRole(role);
         setAdminId(id);
         setCodeAdmin(code);
-        setIsLoggedIn(true)
+        setAdminName(nom);
+        setAdminEmail(email);
+        setIsLoggedIn(true);
     }
 
     const logout = () => {
         setAdminRole(null);
         setAdminId(0);
         setCodeAdmin(null);
-        setIsLoggedIn(false)
+        setAdminName(null);
+        setAdminEmail(null);
+        setIsLoggedIn(false);
     }
 
     const value = {
         adminRole,
         adminId,
         codeAdmin,
+        name,
+        email,
         isLoggedIn,
         login,
         logout,

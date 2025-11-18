@@ -1,20 +1,13 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Home, Users, Settings, Lock, Map, Zap, History, LogOut, Mail, UserCircle } from 'lucide-react';
-
-// Mock user data and navigation links (replace with actual context/state data)
-const MOCK_USER = {
-    name: 'Jane Doe',
-    email: 'jane.doe@example.com',
-    role: 'super_admin', // For conditional logic example
-};
-
+import { useAuth } from '../context/AuthContext';
 const navLinks = [
     { name: 'Accueil', path: '/dashboard', icon: Home, roles: ['super_admin', 'admin_validation', 'admin_moderation'] },
-    { name: 'Utilisateurs', path: '/admin/users', icon: Users, roles: ['super_admin', 'admin_validation'] },
+    { name: 'Utilisateurs', path: '/admin/users', icon: Users, roles: ['super_admin', 'admin_validation','admin_moderation'] },
     { name: 'Administrateurs', path: '/admin', icon: Settings, roles: ['super_admin'] },
     { name: 'Vérifications', path: '/admin/demande', icon: Lock, roles: ['super_admin', 'admin_validation'] },
-    { name: 'Localisations', path: '/admin/localisation', icon: Map, roles: ['super_admin', 'admin_validation', 'admin_moderation'] },
+    { name: 'Localisations', path: '/admin/localisation', icon: Map, roles: ['super_admin', 'admin_validation'] },
     { name: 'Modérations', path: '/admin/signalement', icon: Zap, roles: ['super_admin', 'admin_moderation'] },
     { name: 'Historique', path: '/admin/historique', icon: History, roles: ['super_admin'] },
 ];
@@ -27,32 +20,36 @@ const getNavLinkClass = ({ isActive }) =>
         : 'text-gray-300 hover:bg-gray-700 hover:text-white'
      }`;
 
-const Menu = () => {
+const Menu = ({email,name,role}) => {
+    const {navigate} = useNavigate();
+    const { logout } = useAuth();
     const handleLogout = () => {
-        console.log("Logout initiated for:", MOCK_USER.email);
+        logout();
+        navigate('admin/login');
+        console.log("Logout initiated for:", email);
     };
 
     return (
         <div className="flex flex-col h-screen w-64 bg-gray-800 text-white p-4 shadow-2xl fixed z-50">
             <div className="flex items-center justify-center h-16 mb-6">
-                <span className="text-2xl font-extrabold text-blue-400 tracking-wider">APP-LOGO</span>
+                <span className="text-2xl font-extrabold text-blue-400 tracking-wider">JCAdmin</span>
             </div>
             <NavLink 
-                to="/profile"
+                to="/admin/login"
                 className="flex flex-col p-3 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors duration-200 mb-6 cursor-pointer"
             >
                 <div className="flex items-center">
                     <UserCircle className="w-8 h-8 text-blue-400 mr-3" />
                     <div className="truncate">
-                        <p className="font-semibold text-sm">{MOCK_USER.name}</p>
-                        <p className="text-xs text-gray-400 truncate">{MOCK_USER.email}</p>
+                        <p className="font-semibold text-sm">{name}</p>
+                        <p className="text-xs text-gray-400 truncate">{email}</p>
                     </div>
                 </div>
             </NavLink>
 
             <nav className="flex-grow">
                 {navLinks.map((link) => {
-                    const isAuthorized = link.roles.includes(MOCK_USER.role);
+                    const isAuthorized = link.roles.includes(role);
 
                     if (!isAuthorized) {
                         return null;

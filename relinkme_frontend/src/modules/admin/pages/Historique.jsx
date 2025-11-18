@@ -4,15 +4,18 @@ import axios from "@/services/axiosInstance";
 import {europeanDate} from '../utilities';
 import {getAllAdminUser} from '@/modules/admin/api/AdminApi.js'
 import { SlidersHorizontal } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Historique() {
+    const { adminRole, name, email, codeAdmin,idAdmin  } = useAuth(); 
     const [listHistory,setListHistory] = useState([]);
     const [listAdmin,setListAdmin] = useState([]);
     const [filter,setFilter] = useState(0);
 
     const adminInfo = {
-        codeAdmin: "ADM00015",
-        idAdmin: 15
+        codeAdmin: codeAdmin,
+        idAdmin: idAdmin
+    
     }
     useEffect(()=>{
         fetchListHistory();
@@ -42,7 +45,11 @@ export default function Historique() {
  
   return (
     <div className="flex h-screen bg-gray-50">
-        <Menu/>
+        <Menu
+        name={name}
+        email={email}
+        role={adminRole}
+    />
         <div className='right-pane flex-1 p-8 overflow-y-auto'>
             <h2 className='text-3xl font-bold text-gray-800 mb-6'>Historique des actions</h2>
             <div className=" flex top-table-section">

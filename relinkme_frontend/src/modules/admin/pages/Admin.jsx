@@ -5,6 +5,8 @@ import { getAllUsers } from '../api/AdminApi';
 import {europeanDate} from '../utilities';
 import Menu from '../components/Menu';
 import './Style.css'
+import { useAuth } from '../context/AuthContext';
+
 
  const autorisations = {
         super_admin : 'Superadmin',
@@ -18,6 +20,8 @@ const INITIAL_FORM_STATE = {
 };
 
 function Admin() {
+    
+const { adminRole, name, email,codeAdmin,adminId  } = useAuth(); 
     const [formData,setFormData] = useState({
         utilisateur:'',
         niveau_autorisation:'',
@@ -26,7 +30,7 @@ function Admin() {
     const [manipulateur,setManipulateur] = useState("");
     const [listAdmin,setListAdmin] = useState([]);
     const [listUser, setListUser]  = useState([]);
-    const [codeAdmin,setCodeAdmin] = useState("");
+    const [code_admin,setcode_admin] = useState(codeAdmin);
     const [isModalOpen, setIsModalOpen] = useState(false); 
     const [isEditing, setIsEditing] = useState(false);
     const [idUtilisateur, setIdUtilisateur] = useState(null);
@@ -46,17 +50,17 @@ function Admin() {
         const data = await creation_admin( manipulateur,formData )
     }
 
-    const removeAdmin = async (codeAdmin) => {
-        const data = await deleteAdmin(codeAdmin)
+    const removeAdmin = async (code_admin) => {
+        const data = await deleteAdmin(code_admin)
         fetchListAdmin()
     }
     const fetchToModify = (rowdata) => {
         setFormData({
-            utilisateur: parseInt(rowdata.utilisateur),
+            utilisateur: parseInt(rowdata.utilisateur.id),
             niveau_autorisation:rowdata.niveau_autorisation,
             departement:rowdata.departement
         })
-        setCodeAdmin(rowdata.code_admin);
+        setcode_admin(rowdata.code_admin);
         setIsEditing(true);
         setIsModalOpen(true);
         
@@ -65,8 +69,8 @@ function Admin() {
         const data = await updateAdmin(adminCode,codeManipulateur,form)
         return data
     }
-    const fetchSingleAdmin = async(codeAdmin) => {
-        const data = await getAdminById(codeAdmin)
+    const fetchSingleAdmin = async(code_admin) => {
+        const data = await getAdminById(code_admin)
         setListAdmin(data)
     }
     const fetchListUsers = async () => {
@@ -83,20 +87,20 @@ function Admin() {
 
 const onSubmit = (e) => {
     e.preventDefault();
-    const response = createAdmin(1,formData);
+    const response = createAdmin(adminId,formData);
     console.log(response);
     resetValues();
     fetchListAdmin();
 }
 const onEdit = (e) => {
     e.preventDefault();
-    const response = modifyAdmin(codeAdmin,"ut0001",formData);
-    console.log(codeAdmin+" "+formData.utilisateur)
+    const response = modifyAdmin(code_admin,"ut0001",formData);
+    console.log(code_admin+" "+formData.utilisateur)
     fetchListAdmin()
 }
 const resetValues = () => {
     setFormData(INITIAL_FORM_STATE);
-    setCodeAdmin("");
+    setcode_admin("");
     setIsEditing(false);
     setIsModalOpen(false);
 }
@@ -108,7 +112,11 @@ const handleOpenModal = () => {
 
   return (
      <div className="flex h-screen bg-gray-50">
-    <Menu/>
+    <Menu
+        email={email}
+        name={name}
+        role={adminRole}
+    />
     <div className="right-pane flex-1 p-8 overflow-y-auto">
         <h2 className="text-3xl font-bold text-gray-800 mb-6">Liste des administrateurs</h2>
         <div className="top-table-section">
@@ -191,7 +199,7 @@ const handleOpenModal = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Code administrateur</label>
                                     <input 
                                         type="text" 
-                                        value={codeAdmin} 
+                                        value={code_admin} 
                                         readOnly={true} 
                                         className="w-full select bg-gray-100 cursor-not-allowed" 
                                     />

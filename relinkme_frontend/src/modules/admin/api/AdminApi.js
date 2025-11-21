@@ -71,3 +71,13 @@ export const  getAllUsers = async () => {
     throw error;
   }
 }
+
+export const getStats = async () => {
+  try{
+    const {data} = await axios.get('admin/user/stats')
+    return data.list;
+  }catch (error) {
+    console.error("Erreur :", error.response?.data || error.message);
+    throw error;
+  }
+}

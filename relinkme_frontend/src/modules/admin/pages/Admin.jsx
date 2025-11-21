@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import {creation_admin, getAllAdmin, getAdminById, deleteAdmin, updateAdmin} from '@/modules/admin/api/AdminApi.js'
+import {creation_admin, getAllAdmin, deleteAdmin, updateAdmin} from '@/modules/admin/api/AdminApi.js'
 import  {SlidersHorizontal,Plus,Trash, SquarePen,X} from 'lucide-react'
 import { getAllUsers } from '../api/AdminApi';
 import {europeanDate} from '../utilities';
@@ -27,13 +27,13 @@ const { adminRole, name, email,codeAdmin,adminId  } = useAuth();
         niveau_autorisation:'',
         departement:''
     })
-    const [manipulateur,setManipulateur] = useState("");
+
     const [listAdmin,setListAdmin] = useState([]);
     const [listUser, setListUser]  = useState([]);
     const [code_admin,setcode_admin] = useState(codeAdmin);
     const [isModalOpen, setIsModalOpen] = useState(false); 
     const [isEditing, setIsEditing] = useState(false);
-    const [idUtilisateur, setIdUtilisateur] = useState(null);
+    
 
     useEffect(()=>{
         fetchListAdmin();
@@ -69,10 +69,7 @@ const { adminRole, name, email,codeAdmin,adminId  } = useAuth();
         const data = await updateAdmin(adminCode,codeManipulateur,form)
         return data
     }
-    const fetchSingleAdmin = async(code_admin) => {
-        const data = await getAdminById(code_admin)
-        setListAdmin(data)
-    }
+   
     const fetchListUsers = async () => {
         const data = await getAllUsers()
         setListUser(data)

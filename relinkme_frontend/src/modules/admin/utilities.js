@@ -16,3 +16,38 @@ export function europeanDate(dateString) {
     return `${day}-${month}-${year}\n${hours}:${minutes}:${seconds}.${milliseconds}`;
 
 }
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function formatForNivo(offre, candidature) {
+    const createBase = () =>
+        Array.from({ length: 12 }, (_, i) => ({
+            x: MONTH_NAMES[i],
+            y: 0
+        }));
+
+    const offreData = createBase();
+    const candidatureData = createBase();
+
+    offre.forEach(item => {
+        const idx = item.month - 1; 
+        offreData[idx].y = item.count;
+    });
+
+    
+    candidature.forEach(item => {
+        const idx = item.month - 1;
+        candidatureData[idx].y = item.count;
+    });
+
+    return [
+        {
+            id: "offres",
+            data: offreData
+        },
+        {
+            id: "candidatures",
+            data: candidatureData
+        }
+    ];
+}

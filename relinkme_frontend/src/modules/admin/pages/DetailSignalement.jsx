@@ -32,7 +32,7 @@ function DetailSignal() {
     const [Signal,setSignal] = useState([]);
     const [userData,setUserData] = useState([]);
     const [writeMotif,setWriteMotif] = useState(false);
-    const [modifiedBy,setModifiedBy] = useState(0);
+    
     const [loading, setLoading] = useState(true);
     
     const adminData = {

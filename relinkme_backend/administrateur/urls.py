@@ -3,6 +3,7 @@ from administrateur.views.adminViews import *
 from administrateur.views.signalementViews import *
 
 urlpatterns= [
+    path('login',admin_login),
     path('create/<int:id_utilisateur>/<int:id_admin>', create_admin ),
     path('delete/<str:code_admin>',delete_admin),
     path('update/<str:code_admin>/<str:code_manipulator>',update_admin),
@@ -16,7 +17,10 @@ urlpatterns= [
     path('signalement/<int:signalement_id>',single_signal),
     path('users',get_users),
     path('user/<int:id_utilisateur>',get_single_user),
-    path('historique/<str:code_admin>',get_all_history)
+    path('historique/<str:code_admin>',get_all_history),
+    path('stats/offre',get_offre_count_per_month),
+    path('stats/candidature',get_candidature_count_per_month),
+    path('user/stats',get_user_statistics)
 
 
 ]

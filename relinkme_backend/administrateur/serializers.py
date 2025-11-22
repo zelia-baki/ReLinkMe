@@ -6,11 +6,18 @@ from .models import Administrateur, DemandeVerification, HistoriqueValidation, V
 
 
 class AdministrateurSerializer(serializers.ModelSerializer):
-    utilisateur= UtilisateurSerializer()
     class Meta:
         model = Administrateur
         fields = '__all__'
         read_only_fields = ['id','code_admin','created_at','created_by']
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    utilisateur = UtilisateurSerializer()
+    class Meta:
+        model = Administrateur
+        fields = '__all__'
+        read_only_fields = ['id','code_admin','created_at','created_by']
+
 
 class DemandeVerificationSerializer(serializers.ModelSerializer):
     class Meta:

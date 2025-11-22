@@ -1,19 +1,49 @@
+from datetime import datetime
+
+from django.db.models import Count
+from django.db.models.functions import ExtractMonth
 from django.shortcuts import render
-from administrateur.models import Administrateur, HistoriqueValidation
-from core.models import Utilisateur
+
+from administrateur.AdminLoginSerializer import AdminLoginSerializer
+from administrateur.models import Administrateur, HistoriqueValidation, VerificationLocalisation, DemandeVerification, \
+    Signalement
+from core.models import Utilisateur, Candidature
 from administrateur.serializers import AdministrateurSerializer, UtilisateurSerializers, \
-    UtilisateurVerificationSerializers, HistoriqueSerializer
+    UtilisateurVerificationSerializers, HistoriqueSerializer, AdminUserSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.utils import timezone
 
+from recruteur.models import Offre
 
 CUSTOM_ERROR_MESSAGES = {
     'DoesNotExist': "Cet utilisateur n'existe pas",
     'IntegrityError': "Conflit de données dans la base.",
     'ValidationError': "Les données fournies sont invalides.",
 }
+
+@api_view(['POST'])
+def admin_login(request):
+    serializer = AdminLoginSerializer(data=request.data)
+
+    if serializer.is_valid():
+        user = serializer.validated_data["user"]
+        admin_profile = serializer.validated_data["admin"]
+
+        return Response({
+            "success": True,
+            "id": admin_profile.id,
+            "code_admin": admin_profile.code_admin,
+            "nom_complet": user.nom_complet,
+            "email": user.email,
+            "role":admin_profile.niveau_autorisation
+        }, status=status.HTTP_200_OK)
+
+    return Response({
+        "success": False,
+        "message": serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 #create/<int:id_utilisateur>/<int:id_admin>
 @api_view(['POST'])
@@ -156,7 +186,7 @@ def get_list_admin_user(request,id_admin=0):
         if id_admin != 0:
             list_admin = Administrateur.objects.select_related('utilisateur').get(id=id_admin)
             return Response(
-                {"success": True, "message": '', "list": AdministrateurSerializer(list_admin).data},
+                {"success": True, "message": '', "list": AdminUserSerializer(list_admin).data},
                 status=status.HTTP_200_OK)
         else:
             list_admin = Administrateur.objects.select_related('utilisateur').all()
@@ -185,7 +215,7 @@ def get_single_administrator(request,code_admin):
 @api_view(['GET'])
 def get_users(request):
     try:
-        list_user = Utilisateur.objects.values('id','nom_complet','photo_profil')
+        list_user = Utilisateur.objects.values('id','nom_complet','photo_profil').exclude(role="admin")
         return Response({"success": True, "message": '', "list": UtilisateurSerializers(list_user,many=True).data},
                     status=status.HTTP_200_OK)
 
@@ -243,3 +273,80 @@ def get_all_history(request,code_admin):
             "error": e.__class__.__name__
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+def get_offre_count_per_month(request):
+    try:
+        current_year = datetime.now().year
+        liste = Offre.objects\
+            .filter(date_creation__year=current_year)\
+            .annotate(month=ExtractMonth('date_creation')) \
+            .values('month') \
+            .annotate(count=Count('id')) \
+            .order_by('month')
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": liste
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_candidature_count_per_month(request):
+    try:
+        current_year = datetime.now().year
+        liste = Candidature.objects\
+            .filter(created_at__year=current_year)\
+            .annotate(month=ExtractMonth('created_at')) \
+            .values('month') \
+            .annotate(count=Count('id')) \
+            .order_by('month')
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": liste
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_user_statistics(request):
+    try:
+        chom = Utilisateur.objects.filter(role="chomeur").count()
+        recruteur = Utilisateur.objects.filter(role="recruteur").count()
+        localisation = VerificationLocalisation.objects.filter(statut="en_attente").count()
+        identite = DemandeVerification.objects.filter(statut__in=["en_attente","en_cours"]).count()
+        signalement = Signalement.objects.filter(statut__in=["en_attente","en_cours"]).count()
+
+        liste=[{
+            "chomeur":chom,
+            "recruteur":recruteur,
+            "localisation":localisation,
+            "identite":identite,
+            "signalement":signalement
+        }]
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": liste
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

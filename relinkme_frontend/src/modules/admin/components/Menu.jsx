@@ -3,8 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Home, Users, Settings, Lock, Map, Zap, History, LogOut, Mail, UserCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 const navLinks = [
-    { name: 'Accueil', path: '/admin/accueil', icon: Home, roles: ['super_admin', 'admin_validation', 'admin_moderation'] },
-    { name: 'Utilisateurs', path: '/admin/users', icon: Users, roles: ['super_admin', 'admin_validation','admin_moderation'] },
+    { name: 'Dashboard', path: '/admin/accueil', icon: Home, roles: ['super_admin'] },
+    { name: 'Utilisateurs', path: '/admin/utilisateur', icon: Users, roles: ['super_admin', 'admin_validation','admin_moderation'] },
     { name: 'Administrateurs', path: '/admin', icon: Settings, roles: ['super_admin'] },
     { name: 'Vérifications', path: '/admin/demande', icon: Lock, roles: ['super_admin', 'admin_validation'] },
     { name: 'Localisations', path: '/admin/localisation', icon: Map, roles: ['super_admin', 'admin_validation'] },

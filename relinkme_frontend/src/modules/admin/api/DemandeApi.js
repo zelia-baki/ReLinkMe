@@ -92,3 +92,15 @@ export const traiterLocalisation = async (idLoc,idAdmin,formData) => {
     throw error;
   }
 }
+
+export const getPiece = async (id_utilisateur) => {
+  try {
+    const { data } = await axios.get(
+      `demande/justificatif/${parseInt(id_utilisateur)}`
+    );
+    return data;
+  } catch (error) {
+    console.error("Erreur récupération de la pièce justificative:", error.response?.data || error.message);
+    throw error;
+  }
+};

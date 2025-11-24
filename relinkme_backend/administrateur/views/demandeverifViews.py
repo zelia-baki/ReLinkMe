@@ -3,8 +3,10 @@ from django.db import transaction
 from django.utils import timezone
 
 from core.models import Utilisateur
-from administrateur.models import DemandeVerification, Administrateur, HistoriqueValidation, VerificationLocalisation
-from administrateur.serializers import DemandeVerificationSerializer, VerifLocationSerializer,UtilisateurVerificationSerializers
+from administrateur.models import DemandeVerification, Administrateur, HistoriqueValidation, VerificationLocalisation, \
+    PieceJustificative
+from administrateur.serializers import DemandeVerificationSerializer, VerifLocationSerializer, \
+    UtilisateurVerificationSerializers, PieceSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -332,3 +334,22 @@ def update_verif_loc(request, id_verif_loc, id_admin_verif):
             "error": e.__class__.__name__
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+def get_pièce_jusitificative(request,utilisateur_id):
+    try:
+        piece = PieceJustificative.objects.get(id_utilisateur=utilisateur_id)
+
+        return Response({
+            "success": True,
+            "message": "",
+            "list": PieceSerializer(piece).data
+        }, status=status.HTTP_200_OK)
+
+
+    except Exception as e:
+        # Final fallback for unexpected errors
+        return Response({
+            "success": False,
+            "message": str(e),
+            "error": e.__class__.__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

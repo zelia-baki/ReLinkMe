@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getSingleDemande, getSingleUser, traiterDemande } from '../api/DemandeApi'
+import { getSingleDemande, getSingleUser, traiterDemande,getPiece } from '../api/DemandeApi'
 import { useParams } from 'react-router-dom';
 import {FileText,SquareChevronLeft,SquareChevronRight,Check,X} from 'lucide-react'
 import {europeanDate} from '../utilities';
@@ -12,12 +12,22 @@ const INITIAL_FORM_STATE = {
     motif_refus: '',
     modified_by: 0
 };
+
+const type_piece = {
+    passeport: "Passeport",
+    carte_identite: " Carte d'identité",
+    permis_conduire: "Permis de conduite",
+    justificatif_domicile: "Justificatif de domicile",
+    certificat_travail: "Certificat de travail",
+    autre: "Autre"
+}
 function DemandeConsulter() {
     const { adminRole, name, email, codeAdmin,idAdmin  } = useAuth(); 
     const {id,idUtilisateur} = useParams() ;
     const [demande,setDemande] = useState([]);
     const [userData,setUserData] = useState([]);
     const [writeMotif,setWriteMotif] = useState(false);
+    const [piece,setPiece] = useState([]);
     const [modifiedBy,setModifiedBy] = useState(0);
     const [loading, setLoading] = useState(true);
     
@@ -34,6 +44,7 @@ function DemandeConsulter() {
     useEffect(()=>{
         fetchDemande(id,{code_admin:adminData["codeAdmin"]});
         fetchUser(idUtilisateur);
+        fetchPiece();
     },[])
 
     const resetDemande = () => {
@@ -96,7 +107,16 @@ function DemandeConsulter() {
         fetchDemande(id,{code_admin:adminData["codeAdmin"]});
     }
     
-    
+    const fetchPiece = async () => {
+        try{
+             const data = await getPiece(idUtilisateur);
+            setPiece(data.list);
+            console.log(data.list);
+        } catch(error) {
+            console.error("Error fetching justificative:", error);
+        }
+    }
+
     const cancel = () => {
         setWriteMotif(!writeMotif);
         resetDemande();
@@ -263,7 +283,8 @@ function DemandeConsulter() {
                 </div>
             </div>
             <div className='left-pane'>
-                 <h3 className="text-lg font-semibold text-gray-800 p-4 ">Pièce justificative</h3>
+                <h3 className="text-lg font-semibold text-gray-800 p-4 ">Pièce justificative : {type_piece[piece.type_piece]}</h3>
+                {piece.fichier_url? <img src={piece.fichier_url}/> : "Aucune pièce justificative"}
                 
 
             </div>

@@ -15,6 +15,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.utils import timezone
 
+from core.serializers import UtilisateurSerializer
 from recruteur.models import Offre
 
 CUSTOM_ERROR_MESSAGES = {
@@ -213,10 +214,28 @@ def get_single_administrator(request,code_admin):
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-def get_users(request):
+def get_non_admin_users(request):
     try:
         list_user = Utilisateur.objects.values('id','nom_complet','photo_profil').exclude(role="admin")
         return Response({"success": True, "message": '', "list": UtilisateurSerializers(list_user,many=True).data},
+                    status=status.HTTP_200_OK)
+
+    except Exception as e:
+        error_type = e.__class__.__name__
+        message = CUSTOM_ERROR_MESSAGES.get(error_type, str(e))
+        return Response({"success": False, "message": message, "error": error_type},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_all_users(request):
+    try:
+        list_user = Utilisateur.objects.all()
+        role = request.query_params.get('role')
+
+        if role != "all":
+            list_user = Utilisateur.objects.filter(role=role)
+
+        return Response({"success": True, "message": '', "list": UtilisateurSerializer(list_user,many=True).data},
                     status=status.HTTP_200_OK)
 
     except Exception as e:

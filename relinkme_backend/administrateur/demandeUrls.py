@@ -9,5 +9,6 @@ urlpatterns = [
     path('localisation/liste/<str:code_admin>',list_verif_location),
     path('localisation/<int:demande_id>',single_loc),
     path('localisation/create/<int:id_utilisateur>',create_location),
-    path('localisation/traitement/<int:id_verif_loc>/<int:id_admin_verif>', update_verif_loc)
+    path('localisation/traitement/<int:id_verif_loc>/<int:id_admin_verif>', update_verif_loc),
+    path('justificatif/<int:utilisateur_id>',get_pièce_jusitificative)
 ]

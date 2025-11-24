@@ -44,6 +44,7 @@ import RecruteurRoute from "./components/routes/RecruteurRoute";
 import Login from "./modules/admin/pages/Login";
 import ProtectedRoute from "./modules/admin/context/ProtectedRoute";
 import Dashboard from "./modules/admin/pages/Dashboard";
+import Utilisateur from "./modules/admin/pages/Utilisateurs";
 
 function App() {
   const ROLES = {
@@ -92,6 +93,9 @@ function App() {
           <Route path="/admin/login" element={<Login/>}/>
           <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_VALIDATION,ROLES.ADMIN_MODERATION]} />}>
             <Route path="/admin/accueil" element={<Dashboard/>}/>
+          </Route>
+           <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_VALIDATION,ROLES.ADMIN_MODERATION]} />}>
+            <Route path="/admin/utilisateur" element={<Utilisateur/>}/>
           </Route>
           <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_VALIDATION]} />}>
             <Route path="/admin/demande" element={<Demande />} />

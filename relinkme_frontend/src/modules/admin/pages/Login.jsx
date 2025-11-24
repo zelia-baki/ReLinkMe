@@ -85,7 +85,7 @@ const Login = () => {
                     result.email
                 )
                 setErrors(prev => ({ ...prev, apiError: 'Connexion réussie ! Redirection...' }));
-                navigate("/admin/accueil");
+                navigate("/admin/utilisateur");
 
             } else {
                 setErrors(prev => ({ ...prev, apiError: result.message }));

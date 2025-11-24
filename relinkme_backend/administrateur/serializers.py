@@ -2,7 +2,8 @@ from rest_framework import serializers
 
 from core.models import Utilisateur
 from core.serializers import UtilisateurSerializer
-from .models import Administrateur, DemandeVerification, HistoriqueValidation, VerificationLocalisation, Signalement
+from .models import Administrateur, DemandeVerification, HistoriqueValidation, VerificationLocalisation, Signalement, \
+    PieceJustificative
 
 
 class AdministrateurSerializer(serializers.ModelSerializer):
@@ -41,6 +42,11 @@ class SignalementSerializer(serializers.ModelSerializer):
         model= Signalement
         fields = '__all__'
         read_only_fields = ['id','code_signalement','created_at']
+
+class PieceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PieceJustificative
+        fields = '__all__'
 
 class UtilisateurSerializers(serializers.ModelSerializer):
     class Meta:

@@ -1,12 +1,11 @@
 // modules/offres/pages/DetailOffre.jsx
-// Page de détail d'une offre (accessible à tous, actions selon le rôle)
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getOffreById, deleteOffre } from '../api/offres.api';
 import { getRecruteurProfile } from '@/modules/recruteur/api/recruteur.api';
 import {
-  Briefcase, Building2, Calendar, DollarSign, MapPin,
-  Edit, Trash2, ArrowLeft, Clock, CheckCircle
+  Briefcase, Building2, Calendar, DollarSign,
+  Edit, Trash2, ArrowLeft, CheckCircle, Send
 } from 'lucide-react';
 import ChomeurLayout from '@/modules/chomeurs/layouts/ChomeurLayout';
 
@@ -21,7 +20,6 @@ export default function DetailOffre() {
   const [isRecruteur, setIsRecruteur] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
-  // 📥 Charger l'offre et vérifier si c'est le propriétaire
   useEffect(() => {
     fetchOffre();
     checkOwnership();
@@ -45,89 +43,78 @@ export default function DetailOffre() {
     try {
       const recruteurData = await getRecruteurProfile();
       setIsRecruteur(true);
-
-      // Charger l'offre pour vérifier si c'est le propriétaire
       const offreData = await getOffreById(id);
       setIsOwner(offreData.recruteur === recruteurData.id);
-    } catch (err) {
-      // L'utilisateur n'est pas un recruteur ou pas connecté
+    } catch {
       setIsRecruteur(false);
       setIsOwner(false);
     }
   };
 
-  // 🗑️ Supprimer l'offre
   const handleDelete = async () => {
     try {
       await deleteOffre(id);
-      navigate('/recruteur/mes-offres');
+      navigate('/recruteur/offres');
     } catch (err) {
       console.error('❌ Erreur suppression:', err);
       alert('Impossible de supprimer cette offre.');
     }
   };
 
-  // 📅 Format date
   const formatDate = (dateString) => {
     if (!dateString) return 'Non définie';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: '2-digit', month: 'long', year: 'numeric'
     });
   };
 
-  // 💰 Format salaire
   const formatSalaire = (salaire) => {
     if (!salaire) return 'À négocier';
     return new Intl.NumberFormat('fr-MG', {
-      style: 'currency',
-      currency: 'MGA',
-      minimumFractionDigits: 0
+      style: 'currency', currency: 'MGA', minimumFractionDigits: 0
     }).format(salaire);
   };
 
-  // ⏳ État de chargement
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Chargement de l'offre...</p>
+      <ChomeurLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 text-lg">Chargement de l'offre...</p>
+          </div>
         </div>
-      </div>
+      </ChomeurLayout>
     );
   }
 
-  // ❌ État d'erreur
   if (error || !offre) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+      <ChomeurLayout>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Briefcase className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Offre introuvable</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={() => navigate(-1)}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retour
+            </button>
           </div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Offre introuvable</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Retour
-          </button>
         </div>
-      </div>
+      </ChomeurLayout>
     );
   }
 
   return (
     <ChomeurLayout>
-
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
+
           {/* Bouton retour */}
           <button
             onClick={() => navigate(-1)}
@@ -139,6 +126,7 @@ export default function DetailOffre() {
 
           {/* Carte principale */}
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8">
               <div className="flex items-start justify-between mb-4">
@@ -199,20 +187,18 @@ export default function DetailOffre() {
             {/* Description */}
             <div className="p-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Description du poste</h2>
-              <div className="prose max-w-none">
-                <p className="text-gray-700 whitespace-pre-line leading-relaxed">
-                  {offre.description}
-                </p>
-              </div>
+              <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                {offre.description}
+              </p>
             </div>
 
-            {/* Actions selon le rôle */}
+            {/* Actions */}
             <div className="p-6 bg-gray-50 border-t">
               {isOwner ? (
-                // Actions pour le propriétaire de l'offre
+                // Propriétaire de l'offre
                 <div className="flex gap-4">
                   <button
-                    onClick={() => navigate(`/offres/${offre.id}/modifier`)}
+                    onClick={() => navigate(`/recruteur/offres/modifier/${offre.id}`)}
                     className="flex-1 flex items-center justify-center gap-2 py-3 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                   >
                     <Edit className="w-5 h-5" />
@@ -226,30 +212,27 @@ export default function DetailOffre() {
                     Supprimer
                   </button>
                 </div>
-              ) : (
-                // Actions pour les candidats ou autres recruteurs
-                <div className="flex flex-col gap-4">
-                  {!isRecruteur && (
-                    <button
-                      onClick={() => navigate(`/candidatures/${offre.id}`)}
-                      className="w-full py-4 px-6 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-bold text-lg"
-                    >
-                      Postuler à cette offre
-                    </button>
-                  )}
-                  {isRecruteur && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                      <p className="text-blue-800">
-                        📋 Vous consultez une offre publiée par un autre recruteur
-                      </p>
-                    </div>
-                  )}
+              ) : isRecruteur ? (
+                // Autre recruteur
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                  <p className="text-blue-800">
+                    📋 Vous consultez une offre publiée par un autre recruteur
+                  </p>
                 </div>
+              ) : (
+                // Chômeur → ✅ Bonne URL : /offres/:id/postuler
+                <button
+                  onClick={() => navigate(`/offres/${offre.id}/postuler`)}
+                  className="w-full py-4 px-6 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-bold text-lg flex items-center justify-center gap-2"
+                >
+                  <Send className="w-5 h-5" />
+                  Postuler à cette offre
+                </button>
               )}
             </div>
           </div>
 
-          {/* Modal de confirmation de suppression */}
+          {/* Modal suppression */}
           {deleteConfirm && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">

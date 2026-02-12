@@ -1,462 +1,361 @@
 # chomeur/views.py
-from django.db import transaction
-from rest_framework import generics, status, filters
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import AllowAny, IsAuthenticated  # ✅ Ajoutez IsAuthenticated
-from core.models import Utilisateur
+from rest_framework.response import Response
+from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.db import transaction
+
 from .models import Chomeur, ChomeurCompetence, Exploit
-from .serializers import ChomeurSerializer, ChomeurCompetenceSerializer, ExploitSerializer
-from rest_framework.decorators import action
+from .serializers import (
+    ChomeurSerializer,
+    ChomeurCompetenceSerializer,
+    ExploitSerializer,
+)
+from core.models import Competence, Candidature
+from core.serializers import CandidatureListSerializer
 
 
+# ============================================================
+# HELLO
+# ============================================================
 class HelloChomeurView(APIView):
     def get(self, request):
-        return Response({"message": "Bienvenue dans le module Chômeur !"})
+        return Response({"message": "App Chomeur OK ✅"})
 
 
 # ============================================================
-# 📝 Fonctions utilitaires
+# INSCRIPTION PUBLIQUE (sans auth)
 # ============================================================
-def get_authenticated_user(request):
-    """Renvoie l'utilisateur connecté ou None."""
-    return request.user if getattr(request, "user", None) and request.user.is_authenticated else None
+class InscriptionChomeurView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ChomeurSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            chomeur = serializer.save()
+            return Response({
+                "message": "Inscription réussie",
+                "chomeur": ChomeurSerializer(chomeur, context={'request': request}).data
+            }, status=status.HTTP_201_CREATED)
+        return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # ============================================================
-# 💼 CHOMEUR - INSCRIPTION PUBLIQUE
+# PROFIL COMPLET DU CHÔMEUR CONNECTÉ
 # ============================================================
-class InscriptionChomeurView(generics.CreateAPIView):
-    """
-    Vue publique pour l'inscription des chômeurs.
-    Crée automatiquement un utilisateur + profil chômeur.
-    """
-    queryset = Chomeur.objects.all()
-    serializer_class = ChomeurSerializer
-    permission_classes = [AllowAny]  # Accessible sans authentification
+class ProfilChomeurView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
+    def get(self, request):
+        """Retourne le profil complet avec compétences, exploits, candidatures et statistiques"""
         try:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            
-            headers = self.get_success_headers(serializer.data)
-            return Response({
-                'message': 'Inscription réussie ! Vous pouvez maintenant vous connecter.',
-                'data': serializer.data
-            }, status=status.HTTP_201_CREATED, headers=headers)
-        except ValidationError as e:
-            return Response({
-                'errors': e.detail
-            }, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({
-                'errors': {'general': str(e)}
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            chomeur = request.user.profil_chomeur
+        except Exception:
+            return Response(
+                {"error": "Profil chômeur introuvable pour cet utilisateur"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        utilisateur = request.user
+
+        # Compétences
+        competences = ChomeurCompetence.objects.filter(chomeur=chomeur).select_related('competence')
+        competences_data = ChomeurCompetenceSerializer(competences, many=True).data
+
+        # Exploits
+        exploits = Exploit.objects.filter(chomeur=chomeur).order_by('-date_publication')
+        exploits_data = ExploitSerializer(exploits, many=True).data
+
+        # Candidatures (5 dernières)
+        candidatures = Candidature.objects.filter(chomeur=chomeur).select_related(
+            'offre__recruteur'
+        ).order_by('-date_postulation')[:5]
+        candidatures_data = CandidatureListSerializer(candidatures, many=True).data
+
+        # Statistiques
+        all_candidatures = Candidature.objects.filter(chomeur=chomeur)
+        statistiques = {
+            'total_competences': competences.count(),
+            'total_exploits': exploits.count(),
+            'total_candidatures': all_candidatures.count(),
+        }
+
+        # Profil complet avec les données utilisateur imbriquées
+        profil_data = ChomeurSerializer(chomeur, context={'request': request}).data
+        profil_data['utilisateur'] = {
+            'id': utilisateur.id,
+            'nom_complet': utilisateur.nom_complet,
+            'email': utilisateur.email,
+            'telephone': utilisateur.telephone or '',
+            'localisation': utilisateur.localisation or '',
+            'photo_profil': utilisateur.photo_profil or '',
+            'role': utilisateur.role,
+            'date_inscription': str(utilisateur.date_inscription),
+        }
+
+        return Response({
+            "profil": profil_data,
+            "competences": competences_data,
+            "exploits": exploits_data,
+            "candidatures": candidatures_data,
+            "statistiques": statistiques,
+        })
+
+    def patch(self, request):
+        """Mise à jour du profil chômeur (profession, description, niveau_expertise)
+           + champs utilisateur (nom_complet, telephone, localisation)"""
+        try:
+            chomeur = request.user.profil_chomeur
+        except Exception:
+            return Response(
+                {"error": "Profil chômeur introuvable"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Champs Utilisateur modifiables
+        utilisateur = request.user
+        user_fields = ['nom_complet', 'telephone', 'localisation']
+        for field in user_fields:
+            if field in request.data:
+                setattr(utilisateur, field, request.data[field])
+        utilisateur.save(update_fields=[f for f in user_fields if f in request.data] or ['updated_at'])
+
+        # Champs Chomeur modifiables
+        chomeur_fields = ['profession', 'description', 'niveau_expertise']
+        for field in chomeur_fields:
+            if field in request.data:
+                setattr(chomeur, field, request.data[field])
+        chomeur.save()
+
+        return Response({
+            "message": "Profil mis à jour avec succès",
+            "profil": ChomeurSerializer(chomeur, context={'request': request}).data
+        })
 
 
 # ============================================================
-# 💼 CHOMEUR - CRUD (gardez votre code existant)
+# CRUD CHOMEUR (admin)
 # ============================================================
 class ChomeurListCreateView(generics.ListCreateAPIView):
-    queryset = Chomeur.objects.select_related('utilisateur').all()
+    queryset = Chomeur.objects.all().select_related('utilisateur')
     serializer_class = ChomeurSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['utilisateur__nom_complet', 'profession', 'code_chomeur']
 
-    @transaction.atomic
     def perform_create(self, serializer):
-        creator = get_authenticated_user(self.request)
-        serializer.save(created_by=creator)
-
-    def create(self, request, *args, **kwargs):
-        """Personnalise la réponse après création."""
-        response = super().create(request, *args, **kwargs)
-        response.data['message'] = "Chômeur créé avec succès."
-        return response
+        serializer.save(created_by=self.request.user)
 
 
 class ChomeurDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Chomeur.objects.select_related('utilisateur')
+    queryset = Chomeur.objects.all()
     serializer_class = ChomeurSerializer
 
     def perform_update(self, serializer):
-        modifier = get_authenticated_user(self.request)
-        serializer.save(modified_by=modifier)
-
-    def perform_destroy(self, instance):
-        instance.delete()
+        serializer.save(modified_by=self.request.user)
 
 
 # ============================================================
-# 🧠 CHOMEUR COMPETENCE (gardez votre code existant)
+# COMPÉTENCES DU CHÔMEUR CONNECTÉ
 # ============================================================
-class ChomeurCompetenceListCreateView(generics.ListCreateAPIView):
-    queryset = ChomeurCompetence.objects.select_related('chomeur', 'competence')
-    serializer_class = ChomeurCompetenceSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['chomeur__utilisateur__nom_complet', 'competence__libelle']
+class MesCompetencesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        chomeur = request.user.profil_chomeur
+        competences = ChomeurCompetence.objects.filter(chomeur=chomeur).select_related('competence')
+        return Response(ChomeurCompetenceSerializer(competences, many=True).data)
+
+    def post(self, request):
+        """Ajouter UNE compétence"""
+        try:
+            chomeur = request.user.profil_chomeur
+        except Exception:
+            return Response({"error": "Profil chômeur introuvable"}, status=404)
+
+        # Vérifier la limite de 20
+        if ChomeurCompetence.objects.filter(chomeur=chomeur).count() >= 20:
+            return Response(
+                {"error": "Limite de 20 compétences atteinte"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data = request.data.copy()
+        data['chomeur'] = chomeur.id
+        serializer = ChomeurCompetenceSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(chomeur=chomeur, created_by=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ============================================================
+# BULK COMPÉTENCES
+# ============================================================
+class BulkCompetencesView(APIView):
+    permission_classes = [IsAuthenticated]
 
     @transaction.atomic
-    def perform_create(self, serializer):
-        creator = get_authenticated_user(self.request)
-        serializer.save(created_by=creator)
+    def post(self, request):
+        """Ajouter plusieurs compétences en une seule requête"""
+        try:
+            chomeur = request.user.profil_chomeur
+        except Exception:
+            return Response({"error": "Profil chômeur introuvable"}, status=404)
 
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        response.data['message'] = "Compétence ajoutée au chômeur avec succès."
-        return response
+        competences_data = request.data.get('competences', [])
+        if not competences_data:
+            return Response({"error": "Aucune compétence fournie"}, status=400)
+
+        current_count = ChomeurCompetence.objects.filter(chomeur=chomeur).count()
+        remaining = 20 - current_count
+
+        if remaining <= 0:
+            return Response({"error": "Limite de 20 compétences atteinte"}, status=400)
+
+        # Limiter au nombre de places restantes
+        competences_data = competences_data[:remaining]
+
+        created = []
+        errors = []
+
+        for comp_data in competences_data:
+            comp_id = comp_data.get('competence')
+            niveau = comp_data.get('niveau_maitrise', 'intermédiaire')
+
+            try:
+                competence = Competence.objects.get(id=comp_id)
+                # Vérifier que la compétence n'existe pas déjà
+                if ChomeurCompetence.objects.filter(chomeur=chomeur, competence=competence).exists():
+                    errors.append(f"Compétence '{competence.libelle}' déjà ajoutée")
+                    continue
+
+                cc = ChomeurCompetence.objects.create(
+                    chomeur=chomeur,
+                    competence=competence,
+                    niveau_maitrise=niveau,
+                    created_by=request.user
+                )
+                created.append(ChomeurCompetenceSerializer(cc).data)
+            except Competence.DoesNotExist:
+                errors.append(f"Compétence ID {comp_id} introuvable")
+
+        return Response({
+            "message": f"{len(created)} compétence(s) ajoutée(s)",
+            "created": created,
+            "errors": errors
+        }, status=status.HTTP_201_CREATED)
+
+
+class BulkDeleteCompetencesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Supprimer plusieurs compétences"""
+        try:
+            chomeur = request.user.profil_chomeur
+        except Exception:
+            return Response({"error": "Profil chômeur introuvable"}, status=404)
+
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({"error": "Aucun ID fourni"}, status=400)
+
+        deleted_count, _ = ChomeurCompetence.objects.filter(
+            chomeur=chomeur, id__in=ids
+        ).delete()
+
+        return Response({
+            "message": f"{deleted_count} compétence(s) supprimée(s)",
+            "deleted_count": deleted_count
+        })
+
+
+# ============================================================
+# CRUD COMPÉTENCES INDIVIDUELLES
+# ============================================================
+class ChomeurCompetenceListCreateView(generics.ListCreateAPIView):
+    serializer_class = ChomeurCompetenceSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return ChomeurCompetence.objects.filter(
+            chomeur=self.request.user.profil_chomeur
+        ).select_related('competence')
+
+    def perform_create(self, serializer):
+        chomeur = self.request.user.profil_chomeur
+        serializer.save(chomeur=chomeur, created_by=self.request.user)
 
 
 class ChomeurCompetenceDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ChomeurCompetence.objects.select_related('chomeur', 'competence')
     serializer_class = ChomeurCompetenceSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        try:
+            return ChomeurCompetence.objects.filter(
+                chomeur=self.request.user.profil_chomeur
+            )
+        except Exception:
+            return ChomeurCompetence.objects.none()
 
     def perform_update(self, serializer):
-        modifier = get_authenticated_user(self.request)
-        serializer.save(modified_by=modifier)
+        serializer.save(modified_by=self.request.user)
 
 
 # ============================================================
-# 🏆 EXPLOIT (gardez votre code existant)
+# EXPLOITS DU CHÔMEUR CONNECTÉ
+# ============================================================
+class MesExploitsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        chomeur = request.user.profil_chomeur
+        exploits = Exploit.objects.filter(chomeur=chomeur).order_by('-date_publication')
+        return Response(ExploitSerializer(exploits, many=True).data)
+
+    def post(self, request):
+        try:
+            chomeur = request.user.profil_chomeur
+        except Exception:
+            return Response({"error": "Profil chômeur introuvable"}, status=404)
+
+        serializer = ExploitSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(chomeur=chomeur, created_by=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ============================================================
+# CRUD EXPLOITS INDIVIDUELS
 # ============================================================
 class ExploitListCreateView(generics.ListCreateAPIView):
-    queryset = Exploit.objects.select_related('chomeur')
     serializer_class = ExploitSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['titre', 'chomeur__utilisateur__nom_complet', 'code_exploit']
+    permission_classes = [IsAuthenticated]
 
-    @transaction.atomic
+    def get_queryset(self):
+        try:
+            return Exploit.objects.filter(
+                chomeur=self.request.user.profil_chomeur
+            ).order_by('-date_publication')
+        except Exception:
+            return Exploit.objects.none()
+
     def perform_create(self, serializer):
-        creator = get_authenticated_user(self.request)
-        serializer.save(created_by=creator)
-
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        response.data['message'] = "Exploit enregistré avec succès."
-        return response
+        chomeur = self.request.user.profil_chomeur
+        serializer.save(chomeur=chomeur, created_by=self.request.user)
 
 
 class ExploitDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Exploit.objects.select_related('chomeur')
     serializer_class = ExploitSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        try:
+            return Exploit.objects.filter(
+                chomeur=self.request.user.profil_chomeur
+            )
+        except Exception:
+            return Exploit.objects.none()
 
     def perform_update(self, serializer):
-        modifier = get_authenticated_user(self.request)
-        serializer.save(modified_by=modifier)
-        
-        
-# Ajoutez ces imports en haut du fichier
-from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAuthenticated
-from core.models import Candidature, Evaluation
-# chomeur/views.py
-
-# ============================================================
-# 📊 PROFIL COMPLET DU CHÔMEUR CONNECTÉ
-# ============================================================
-class ProfilChomeurView(APIView):
-    """
-    Récupère le profil complet du chômeur connecté avec toutes ses données
-    GET /chomeur/mon-profil/
-    """
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        try:
-            # Récupérer le profil du chômeur connecté
-            chomeur = Chomeur.objects.select_related('utilisateur').get(
-                utilisateur=request.user
-            )
-            
-            # Sérialiser les données principales
-            chomeur_data = ChomeurSerializer(chomeur).data
-            
-            # Ajouter les compétences
-            competences = ChomeurCompetence.objects.filter(
-                chomeur=chomeur
-            ).select_related('competence')
-            competences_data = ChomeurCompetenceSerializer(competences, many=True).data
-            
-            # Ajouter les exploits
-            exploits = Exploit.objects.filter(chomeur=chomeur).order_by('-date_publication')
-            exploits_data = ExploitSerializer(exploits, many=True).data
-            
-            # Ajouter les candidatures
-            from core.models import Candidature
-            candidatures = Candidature.objects.filter(
-                chomeur=chomeur
-            ).select_related('offre', 'offre__recruteur').order_by('-date_postulation')
-            
-            candidatures_data = []
-            for cand in candidatures:
-                candidatures_data.append({
-                    'id': cand.id,
-                    'code_candidature': cand.code_candidature,
-                    'offre': {
-                        'id': cand.offre.id,
-                        'titre': cand.offre.titre,
-                        'entreprise': cand.offre.recruteur.nom_entreprise or cand.offre.recruteur.utilisateur.nom_complet,
-                        'type_contrat': cand.offre.type_contrat
-                    },
-                    'statut': cand.statut,
-                    'date_postulation': cand.date_postulation,
-                    'jetons_utilises': cand.jetons_utilises,
-                    'lettre_motivation': cand.lettre_motivation,
-                    'cv_fichier': cand.cv_fichier
-                })
-            
-            # Calculer les statistiques
-            total_candidatures = candidatures.count()
-            candidatures_acceptees = candidatures.filter(statut='acceptee').count()
-            candidatures_entretien = candidatures.filter(statut='entretien').count()
-            
-            taux_reussite = 0
-            if total_candidatures > 0:
-                taux_reussite = (candidatures_acceptees / total_candidatures * 100)
-            
-            # Récupérer la note moyenne des évaluations
-            from core.models import Evaluation
-            from django.db.models import Avg
-            
-            evaluations = Evaluation.objects.filter(
-                chomeur=chomeur,
-                type_evaluation='recruteur_vers_chomeur'
-            )
-            note_moyenne = evaluations.aggregate(Avg('note'))['note__avg'] or 0
-            
-            statistiques = {
-                'candidatures_total': total_candidatures,
-                'candidatures_acceptees': candidatures_acceptees,
-                'candidatures_entretien': candidatures_entretien,
-                'candidatures_refusees': candidatures.filter(statut='refusee').count(),
-                'candidatures_en_attente': candidatures.filter(statut='en_attente').count(),
-                'taux_reussite': round(taux_reussite, 1),
-                'note_moyenne': round(float(note_moyenne), 1),
-                'exploits_publies': exploits.filter(visible=True).count(),
-                'exploits_total': exploits.count(),
-                'competences_total': competences.count()
-            }
-            
-            return Response({
-                'profil': chomeur_data,
-                'competences': competences_data,
-                'exploits': exploits_data,
-                'candidatures': candidatures_data,
-                'statistiques': statistiques
-            }, status=status.HTTP_200_OK)
-            
-        except Chomeur.DoesNotExist:
-            return Response({
-                'errors': {'general': 'Profil chômeur non trouvé pour cet utilisateur'}
-            }, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({
-                'errors': {'general': str(e)}
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# ============================================================
-# 🎯 COMPÉTENCES DU CHÔMEUR CONNECTÉ
-# ============================================================
-# Ajoutez ces imports en haut
-from rest_framework.decorators import action
-
-# Modifiez la classe MesCompetencesView
-class MesCompetencesView(generics.ListCreateAPIView):
-    """
-    Liste et ajoute des compétences pour le chômeur connecté
-    """
-    serializer_class = ChomeurCompetenceSerializer
-    permission_classes = [IsAuthenticated]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['competence__libelle', 'competence__categorie', 'niveau_maitrise']
-    
-    # 🔹 Limite maximale
-    MAX_COMPETENCES = 20
-    
-    def get_queryset(self):
-        try:
-            chomeur = Chomeur.objects.get(utilisateur=self.request.user)
-            return ChomeurCompetence.objects.filter(
-                chomeur=chomeur
-            ).select_related('competence').order_by('-created_at')
-        except Chomeur.DoesNotExist:
-            return ChomeurCompetence.objects.none()
-    
-    @transaction.atomic
-    def perform_create(self, serializer):
-        try:
-            chomeur = Chomeur.objects.get(utilisateur=self.request.user)
-            
-            # ✅ Vérifier la limite
-            current_count = ChomeurCompetence.objects.filter(chomeur=chomeur).count()
-            if current_count >= self.MAX_COMPETENCES:
-                raise ValidationError({
-                    "general": f"Limite de {self.MAX_COMPETENCES} compétences atteinte"
-                })
-            
-            serializer.save(chomeur=chomeur, created_by=self.request.user)
-        except Chomeur.DoesNotExist:
-            raise ValidationError({"general": "Profil chômeur non trouvé"})
-    
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        response.data['message'] = "Compétence ajoutée avec succès."
-        return response
-
-
-# 🆕 Ajoutez cette nouvelle vue pour l'ajout en masse
-class BulkCompetencesView(APIView):
-    """
-    Ajoute plusieurs compétences en une seule requête
-    POST /chomeur/mes-competences/bulk/
-    """
-    permission_classes = [IsAuthenticated]
-    MAX_COMPETENCES = 20
-    
-    @transaction.atomic
-    def post(self, request):
-        try:
-            chomeur = Chomeur.objects.get(utilisateur=request.user)
-            competences_data = request.data.get('competences', [])
-            
-            if not competences_data:
-                return Response({
-                    'errors': {'general': 'Aucune compétence fournie'}
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Vérifier la limite
-            current_count = ChomeurCompetence.objects.filter(chomeur=chomeur).count()
-            remaining_slots = self.MAX_COMPETENCES - current_count
-            
-            if len(competences_data) > remaining_slots:
-                return Response({
-                    'errors': {
-                        'general': f'Vous ne pouvez ajouter que {remaining_slots} compétence(s) supplémentaire(s)'
-                    }
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Créer les compétences
-            created_competences = []
-            errors = []
-            
-            for comp_data in competences_data:
-                try:
-                    # Vérifier si déjà existante
-                    if ChomeurCompetence.objects.filter(
-                        chomeur=chomeur,
-                        competence_id=comp_data.get('competence')
-                    ).exists():
-                        errors.append({
-                            'competence': comp_data.get('competence'),
-                            'error': 'Compétence déjà ajoutée'
-                        })
-                        continue
-                    
-                    # Créer la compétence
-                    chomeur_competence = ChomeurCompetence.objects.create(
-                        chomeur=chomeur,
-                        competence_id=comp_data.get('competence'),
-                        niveau_maitrise=comp_data.get('niveau_maitrise', 'intermédiaire'),
-                        created_by=request.user
-                    )
-                    created_competences.append(chomeur_competence)
-                    
-                except Exception as e:
-                    errors.append({
-                        'competence': comp_data.get('competence'),
-                        'error': str(e)
-                    })
-            
-            # Sérialiser les compétences créées
-            serializer = ChomeurCompetenceSerializer(created_competences, many=True)
-            
-            return Response({
-                'message': f'{len(created_competences)} compétence(s) ajoutée(s) avec succès',
-                'created': len(created_competences),
-                'errors': errors if errors else None,
-                'data': serializer.data
-            }, status=status.HTTP_201_CREATED)
-            
-        except Chomeur.DoesNotExist:
-            return Response({
-                'errors': {'general': 'Profil chômeur non trouvé'}
-            }, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({
-                'errors': {'general': str(e)}
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# 🆕 Suppression en masse
-class BulkDeleteCompetencesView(APIView):
-    """
-    Supprime plusieurs compétences en une seule requête
-    POST /chomeur/mes-competences/bulk-delete/
-    """
-    permission_classes = [IsAuthenticated]
-    
-    @transaction.atomic
-    def post(self, request):
-        try:
-            chomeur = Chomeur.objects.get(utilisateur=request.user)
-            ids = request.data.get('ids', [])
-            
-            if not ids:
-                return Response({
-                    'errors': {'general': 'Aucun ID fourni'}
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Supprimer
-            deleted_count = ChomeurCompetence.objects.filter(
-                chomeur=chomeur,
-                id__in=ids
-            ).delete()[0]
-            
-            return Response({
-                'message': f'{deleted_count} compétence(s) supprimée(s)',
-                'deleted': deleted_count
-            }, status=status.HTTP_200_OK)
-            
-        except Chomeur.DoesNotExist:
-            return Response({
-                'errors': {'general': 'Profil chômeur non trouvé'}
-            }, status=status.HTTP_404_NOT_FOUND)
-
-# ============================================================
-# 🏆 EXPLOITS DU CHÔMEUR CONNECTÉ
-# ============================================================
-class MesExploitsView(generics.ListCreateAPIView):
-    """
-    Liste et ajoute des exploits pour le chômeur connecté
-    GET/POST /chomeur/mes-exploits/
-    """
-    serializer_class = ExploitSerializer
-    permission_classes = [IsAuthenticated]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['titre', 'description']
-    
-    def get_queryset(self):
-        try:
-            chomeur = Chomeur.objects.get(utilisateur=self.request.user)
-            return Exploit.objects.filter(
-                chomeur=chomeur
-            ).order_by('-date_publication')
-        except Chomeur.DoesNotExist:
-            return Exploit.objects.none()
-    
-    @transaction.atomic
-    def perform_create(self, serializer):
-        try:
-            chomeur = Chomeur.objects.get(utilisateur=self.request.user)
-            serializer.save(chomeur=chomeur, created_by=self.request.user)
-        except Chomeur.DoesNotExist:
-            raise ValidationError({"general": "Profil chômeur non trouvé"})
-    
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        response.data['message'] = "Exploit ajouté avec succès."
-        return response
+        serializer.save(modified_by=self.request.user)

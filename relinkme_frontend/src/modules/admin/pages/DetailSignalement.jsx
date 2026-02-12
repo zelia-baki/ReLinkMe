@@ -263,7 +263,7 @@ function DetailSignal() {
                         <tr>
                             <td className='label'>Offre </td>
                             <td>:</td>
-                            <td>{Signal.id_offre}</td>
+                            <td>{Signal.id_offre.id}</td>
                         </tr>
                         <tr>
                             <td className='label'>Exploit</td>
@@ -300,13 +300,11 @@ function DetailSignal() {
                 </div>
             </div>
             <div className='left-pane'>
-                <h3 className="text-lg font-semibold text-gray-800 p-4 ">Preuve signalement</h3>
-                <iframe
-                    style={{border:0,width:"100%",height:"800px"}}
-                    loading="lazy"
-                    allowFullScreen
-                    src={Signal.preuves_url}>
-                </iframe>
+                <h3 className="text-lg font-semibold text-gray-800 p-4 ">Contenu signalement</h3>
+               <div style={{padding:"20px"}}>
+                <div style={{fontWeight:"bold",fontSize:"16pt",paddingBottom:"20px"}}>{Signal.id_offre.titre}</div>
+                <div style={{textAlign:"justify"}}>{Signal.id_offre.description}</div>
+               </div>
             </div>
         </div>
 

@@ -2,8 +2,8 @@ from rest_framework import serializers
 
 from core.models import Utilisateur
 from core.serializers import UtilisateurSerializer
-from .models import Administrateur, DemandeVerification, HistoriqueValidation, VerificationLocalisation, Signalement, \
-    PieceJustificative
+from recruteur.serializers import   OffreSerializer
+from .models import Administrateur, DemandeVerification, HistoriqueValidation, VerificationLocalisation, Signalement, PieceJustificative
 
 
 class AdministrateurSerializer(serializers.ModelSerializer):
@@ -38,10 +38,11 @@ class VerifLocationSerializer(serializers.ModelSerializer):
         read_only_fields = ['id','code_verification','date_verification']
 
 class SignalementSerializer(serializers.ModelSerializer):
+    id_offre = OffreSerializer()
     class Meta:
         model= Signalement
         fields = '__all__'
-        read_only_fields = ['id','code_signalement','created_at']
+        read_only_fields = ['id','code_signalement','created_at','titre','description']
 
 class PieceSerializer(serializers.ModelSerializer):
     class Meta:

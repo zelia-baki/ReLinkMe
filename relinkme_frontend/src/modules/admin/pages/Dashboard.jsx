@@ -38,7 +38,6 @@ function Dashboard() {
         try{
             const data = await getStats();
             setStatistics(data[0]);
-            console.log(data[0])
         }catch(error) {
             console.error("Error fetching demande:", error);
         }
@@ -47,7 +46,6 @@ function Dashboard() {
             try{
                 const {data} = await axios.get(`admin/historique/${adminInfo["codeAdmin"]}?admin=0`)
                 setListHistory(data.list.slice(0, 5));
-                console.log(data)
             }catch (error) {
                 console.error("Erreur de récupération des historiques:", error.response?.data || error.message);
             }
@@ -63,8 +61,6 @@ const fetchStats = async () => {
         const candidature = candidatureRes.data.list;
 
         const formatted = formatForNivo(offre, candidature);
-        
-        console.log(formatted);
         setChartData(formatted);
 
     } catch (error) {

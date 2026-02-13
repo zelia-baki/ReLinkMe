@@ -6,7 +6,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({children}) => {
     const [adminRole,setAdminRole] = useState(null);
-    const [adminId,setAdminId] = useState(0);
+    const [idAdmin,setAdminId] = useState(0);
     const [codeAdmin,setCodeAdmin] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [name,setAdminName] = useState(null);
@@ -38,7 +38,7 @@ export const AuthProvider = ({children}) => {
 
     const value = {
         adminRole,
-        adminId,
+        idAdmin,
         codeAdmin,
         name,
         email,

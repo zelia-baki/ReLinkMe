@@ -41,7 +41,7 @@ function Signalement() {
     const fetchListSignal = async (filter,body) => {
          const data = await listSignalement(filter,body)
                 setListSignal(data.list)
-                console.log(data)
+               
     };
     const onFilter = (e) => {
         setFilter(e.target.value);
@@ -80,6 +80,7 @@ function Signalement() {
             </div>
         </div>
         <div className='bottom-table-section bg-white rounded-xl shadow-lg overflow-hidden mt-6'>
+             <div className='Utilisateur-table' style={{overflow:"scroll",height:"70vh"}}>
             <table className='info-table w-full border-collapse'>
                 <thead>
                     <tr>         
@@ -116,6 +117,7 @@ function Signalement() {
                     }
                 </tbody>
                 </table>
+                </div>
         </div>
 
     </div>

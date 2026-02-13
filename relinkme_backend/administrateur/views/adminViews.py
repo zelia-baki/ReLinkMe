@@ -171,7 +171,7 @@ def get_list_admin(request):
     try:
         list_admin = Administrateur.objects.all().order_by('updated_at').reverse()
 
-        return Response({"success":True,"message":'',"list": AdministrateurSerializer(list_admin,many=True).data},status=status.HTTP_200_OK)
+        return Response({"success":True,"message":'',"list": AdminUserSerializer(list_admin,many=True).data},status=status.HTTP_200_OK)
 
     except Exception as e:
         error_type = e.__class__.__name__

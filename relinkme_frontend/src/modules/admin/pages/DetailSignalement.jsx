@@ -31,8 +31,7 @@ function DetailSignal() {
     const {id,idUtilisateur} = useParams() ;
     const [Signal,setSignal] = useState([]);
     const [userData,setUserData] = useState([]);
-    const [writeMotif,setWriteMotif] = useState(false);
-    
+    const [writeMotif,setWriteMotif] = useState(false); 
     const [loading, setLoading] = useState(true);
     
     const adminData = {
@@ -67,11 +66,9 @@ function DetailSignal() {
     const fetchUser = async (id) => {
         const data = await getSingleUser(id)
         setUserData(data.list[0]);
-        console.log(data.list[0]);
-
     }
     const modifySignal = async (form) => {
-        const data = await traiterSignalement(id,adminData['idAdmin'],form)
+        await traiterSignalement(id,adminData['idAdmin'],form)
         fetchSignal(id,{code_admin:adminData["codeAdmin"]});
         
     }
@@ -84,7 +81,6 @@ function DetailSignal() {
     }
      const accept = () => {
         setWriteMotif(!writeMotif)
-        console.log("clicked")
     }
 
     const confirm = () => {
@@ -92,7 +88,7 @@ function DetailSignal() {
         ...formData,
         statut: "traite"
         };
-        const data = modifySignal(updated);
+        modifySignal(updated);
         resetSignal();
         setWriteMotif(!writeMotif);
         fetchSignal(id,{code_admin:adminData["codeAdmin"]});
@@ -103,7 +99,7 @@ function DetailSignal() {
         statut: "rejete",
 
         };
-        const data = modifySignal(updated);
+        modifySignal(updated);
         resetSignal();
         fetchSignal(id,{code_admin:adminData["codeAdmin"]});
     }
@@ -231,11 +227,11 @@ function DetailSignal() {
                                 writeMotif ? 
                                 <td>
                                     <input type="text" name="motif_refus" value={formData.decision} onChange={handleChange}/>
-                                    <div>
-                                        <button onClick={cancel}>
+                                    <div className='flex items-end justify-end my-1.5'>
+                                        <button onClick={cancel} className='cancel-button'>
                                             Annuler
                                         </button>
-                                        <button onClick={confirm}>
+                                        <button onClick={confirm} className='add-button'>
                                             Confirmer
                                         </button>
                                     </div>

@@ -16,7 +16,6 @@ function DetailLoc() {
     const {id,idUtilisateur} = useParams() ;
     const [Localisation,setLocalisation] = useState([]);
     const [userData,setUserData] = useState([]);
-    const [modifiedBy,setModifiedBy] = useState(0);
     const [loading, setLoading] = useState(true);
 
     const adminData = {
@@ -50,23 +49,22 @@ function DetailLoc() {
     const fetchUser = async (id) => {
         const data = await getSingleUser(id)
         setUserData(data.list[0]);
-        console.log(data.list[0]);
 
     }
     const modifyLocalisation = async (form) => {
-        const data = await traiterLocalisation(id,adminData['idAdmin'],form)
+        await traiterLocalisation(id,adminData['idAdmin'],form)
         fetchLocalisation(id,{code_admin:adminData["codeAdmin"]});
         
     }
 
     const reject = () => {
-        const data = modifyLocalisation({statut:'refuse'});
+        modifyLocalisation({statut:'refuse'});
         resetLocalisation();
         fetchLocalisation(id,{code_admin:adminData["codeAdmin"]});
     }
     const approve = () => {
       
-        const data = modifyLocalisation({statut:'verifie'});
+        modifyLocalisation({statut:'verifie'});
         resetLocalisation();
         fetchLocalisation(id,{code_admin:adminData["codeAdmin"]});
     }
@@ -140,7 +138,7 @@ function DetailLoc() {
             </div>
         </div>
         
-        <div className='action'>
+        <div className='action-section'>
             {getStatusBadge(Localisation.statut)}
                 
             {

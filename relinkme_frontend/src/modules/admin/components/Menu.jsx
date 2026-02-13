@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Home, Users, Settings, Lock, Map, Zap, History, LogOut, Mail, UserCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +11,6 @@ const navLinks = [
     { name: 'Historique', path: '/admin/historique', icon: History, roles: ['super_admin'] },
 ];
 
-// Reusable styling function for NavLink
 const getNavLinkClass = ({ isActive }) => 
     `flex items-center p-3 my-1 rounded-lg transition-colors duration-200 
      ${isActive 

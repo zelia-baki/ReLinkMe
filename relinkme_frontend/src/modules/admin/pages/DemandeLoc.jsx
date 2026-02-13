@@ -29,7 +29,6 @@ function DemandeLocalisation() {
     const fetchListLoc = async (codeAdmin,filter) => {
          const data = await getAllLocListe(codeAdmin,filter)
                 setListLoc(data.list)
-                console.log(data.list)
     };
     const onFilter = (e) => {
         setFilter(e.target.value);
@@ -65,6 +64,7 @@ function DemandeLocalisation() {
             </div>
         </div>
         <div className='bottom-table-section bg-white rounded-xl shadow-lg overflow-hidden mt-6'>
+             <div className='Utilisateur-table' style={{overflow:"scroll",height:"70vh"}}>
             <table className='info-table w-full border-collapse'>
                 <thead>
                     <tr>
@@ -106,6 +106,7 @@ function DemandeLocalisation() {
                     }
                 </tbody>
                 </table>
+                </div>
         </div>
 
     </div>

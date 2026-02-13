@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {creation_admin, getAllAdmin, deleteAdmin, updateAdmin} from '@/modules/admin/api/AdminApi.js'
-import  {SlidersHorizontal,Plus,Trash, SquarePen,X} from 'lucide-react'
+import  {Plus,Trash, SquarePen,X} from 'lucide-react'
 import { getAllUsers } from '../api/AdminApi';
 import {europeanDate} from '../utilities';
 import Menu from '../components/Menu';
@@ -44,14 +44,13 @@ const { adminRole, name, email,codeAdmin,adminId  } = useAuth();
     const fetchListAdmin = async () => {
         const data = await getAllAdmin()
         setListAdmin(data.list)
-        console.log(data.list)
     }
     const createAdmin = async (manipulateur,formData) => {
-        const data = await creation_admin( manipulateur,formData )
+        await creation_admin( manipulateur,formData )
     }
 
     const removeAdmin = async (code_admin) => {
-        const data = await deleteAdmin(code_admin)
+        await deleteAdmin(code_admin)
         fetchListAdmin()
     }
     const fetchToModify = (rowdata) => {
@@ -84,15 +83,15 @@ const { adminRole, name, email,codeAdmin,adminId  } = useAuth();
 
 const onSubmit = (e) => {
     e.preventDefault();
-    const response = createAdmin(adminId,formData);
-    console.log(response);
+    createAdmin(adminId,formData);
     resetValues();
     fetchListAdmin();
 }
 const onEdit = (e) => {
     e.preventDefault();
-    const response = modifyAdmin(code_admin,"ut0001",formData);
-    console.log(code_admin+" "+formData.utilisateur)
+    modifyAdmin(code_admin,"ut0001",formData);
+    setIsEditing(false);
+    setIsModalOpen(false);
     fetchListAdmin()
 }
 const resetValues = () => {
@@ -125,6 +124,7 @@ const handleOpenModal = () => {
             </button>
         </div>
         <div className="bottom-table-section bg-white rounded-xl shadow-lg overflow-hidden mt-6">
+             <div className='Utilisateur-table' style={{overflow:"scroll",height:"70vh"}}>
             <table className="info-table w-full border-collapse">
                 <thead>
                     <tr>
@@ -149,7 +149,7 @@ const handleOpenModal = () => {
                         <tr key= {adminIndex}>
                             <td>{adminIndex+1}</td>
                             <td>{admin.code_admin}</td>
-                            <td>{admin.utilisateur}</td>
+                            <td>{admin.utilisateur.email}</td>
                             <td>{autorisations[admin.niveau_autorisation]}</td>
                             <td>{admin.departement}</td>
                             <td>{admin.created_by}</td>
@@ -175,6 +175,7 @@ const handleOpenModal = () => {
             {listAdmin.length === 0 && (
                         <p className="text-center text-gray-500 py-6">Aucun administrateur trouvé.</p>
                     )}
+            </div>
         </div>
          {isModalOpen && (
                     <div className='form-modal'>

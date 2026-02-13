@@ -5,7 +5,6 @@ import { login_admin } from '../api/LoginApi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// Define the shape of the initial form state
 const INITIAL_FORM_STATE = {
     email: '',
     password: '',
@@ -75,7 +74,7 @@ const Login = () => {
             const result = await login_admin(formData)
             
             if (result.success) {
-                console.log("Login successful:", result);
+                
                 setFormData(INITIAL_FORM_STATE);
                 login(
                     result.role,

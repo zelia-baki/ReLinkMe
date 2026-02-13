@@ -31,7 +31,7 @@ export default function Utilisateur() {
         try{
             const {data} = await axios.get(`admin/users/all?role=${filter}`)
             setListUtilisateur(data.list);
-            console.log(data)
+            
         }catch (error) {
             console.error("Erreur de récupération des utilisateurs:", error.response?.data || error.message);
         }
@@ -40,7 +40,6 @@ export default function Utilisateur() {
     const onFilter = (e) => {
         setFilter(e.target.value);
         fetchListUtilisateur();
-        console.log(filter)
     }
  
   return (
@@ -72,7 +71,7 @@ export default function Utilisateur() {
                 </div>
             </div>
             <div className='bottom-table-section bg-white rounded-xl shadow-lg overflow-hidden mt-6'>
-                <div className='Utilisateur-table' style={{overflow:"auto",height:"70vh"}}>
+                <div className='Utilisateur-table' style={{overflow:"scroll",height:"70vh"}}>
                      <table className='info-table w-full border-collapse'>
                         <thead>
                             <tr>   

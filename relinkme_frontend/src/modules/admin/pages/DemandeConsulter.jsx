@@ -28,7 +28,6 @@ function DemandeConsulter() {
     const [userData,setUserData] = useState([]);
     const [writeMotif,setWriteMotif] = useState(false);
     const [piece,setPiece] = useState([]);
-    const [modifiedBy,setModifiedBy] = useState(0);
     const [loading, setLoading] = useState(true);
     
     const adminData = {
@@ -45,6 +44,7 @@ function DemandeConsulter() {
         fetchDemande(id,{code_admin:adminData["codeAdmin"]});
         fetchUser(idUtilisateur);
         fetchPiece();
+        
     },[])
 
     const resetDemande = () => {
@@ -53,9 +53,8 @@ function DemandeConsulter() {
     const fetchDemande = async (idDmd,body) => {
         setLoading(true);
         try{
-             const data = await getSingleDemande(idDmd,body);
+            const data = await getSingleDemande(idDmd,body);
             setDemande(data.list);
-                    console.log(data.list);
         } catch(error) {
             console.error("Error fetching demande:", error);
         } finally {
@@ -65,11 +64,9 @@ function DemandeConsulter() {
     const fetchUser = async (id) => {
         const data = await getSingleUser(id)
         setUserData(data.list[0]);
-        console.log(data.list[0]);
-
     }
     const modifyDemande = async (form) => {
-        const data = await traiterDemande(id,adminData['idAdmin'],form)
+        await traiterDemande(id,adminData['idAdmin'],form)
         fetchDemande(id,{code_admin:adminData["codeAdmin"]});
         
     }
@@ -82,14 +79,13 @@ function DemandeConsulter() {
 };
     const reject = () => {
         setWriteMotif(!writeMotif)
-        console.log("clicked")
     }
     const confirm = () => {
         const updated = {
         ...formData,
         statut: "refusee"
-    };
-        const data = modifyDemande(updated);
+        };
+        modifyDemande(updated);
         resetDemande();
         setWriteMotif(!writeMotif);
         fetchDemande(id,{code_admin:adminData["codeAdmin"]});
@@ -101,8 +97,7 @@ function DemandeConsulter() {
         
     };
 
-        const data = modifyDemande(updated);
-        
+        modifyDemande(updated);
         resetDemande();
         fetchDemande(id,{code_admin:adminData["codeAdmin"]});
     }
@@ -111,7 +106,7 @@ function DemandeConsulter() {
         try{
              const data = await getPiece(idUtilisateur);
             setPiece(data.list);
-            console.log(data.list);
+           
         } catch(error) {
             console.error("Error fetching justificative:", error);
         }

@@ -32,9 +32,10 @@ function Demande() {
         codeAdmin,
         name,
         email,
+        idAdmin
     });
 
-        fetchListDemande(filter,{code_admin:"ADM00015"})
+        fetchListDemande(filter,{code_admin:adminInfo["codeAdmin"]})
     },[])
 
     const fetchListDemande = async (filter,body) => {
@@ -89,6 +90,7 @@ function Demande() {
                     </div>
         </div>
         <div className='bottom-table-section bg-white rounded-xl shadow-lg overflow-hidden mt-6'>
+            <div className='Utilisateur-table' style={{overflow:"scroll",height:"70vh"}}>
             <table className='info-table w-full border-collapse'>
                 <thead>
                     <tr>
@@ -130,8 +132,9 @@ function Demande() {
                     }
                 </tbody>
                 </table>
+           </div> 
         </div>
-
+                    
     </div>
     </div>
   )
